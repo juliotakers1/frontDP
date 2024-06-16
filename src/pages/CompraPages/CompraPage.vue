@@ -176,7 +176,7 @@
 
       <div class="row q-col-gutter-sm">
 
-        <div class="col-md-4 col-sm-12 q-mb-md" id="select">
+        <div class="col-md-12 col-sm-12 q-mb-md" id="select">
           <q-toggle
         v-model="third"
         checked-icon="check"
@@ -184,6 +184,21 @@
         unchecked-icon="clear"
         label="Buscar Producto Nombre"
       />
+      <q-toggle
+        v-model="barras"
+        checked-icon="check"
+        color="green"
+        unchecked-icon="clear"
+        label="Buscar Producto Codigo Barras"
+      />
+      <q-toggle
+        v-model="nuevo"
+        checked-icon="check"
+        color="green"
+        unchecked-icon="clear"
+        label="Crear Producto"
+      />
+
         <q-select
           outlined
           dense
@@ -195,7 +210,6 @@
           option-label="nombre"
           option-value="id"
           @filter="filterFn"
-          style="width: 250px"
           v-if="third"
         >
         <template v-slot:no-option>
@@ -215,27 +229,20 @@
           />
         </template>
       </q-select>
-        </div>
-        <div class="col-md-4 col-sm-12 q-mb-md" id="barras">
-          <q-toggle
-        v-model="barras"
-        checked-icon="check"
-        color="green"
-        unchecked-icon="clear"
-        label="Buscar Producto Codigo Barras"
-      />
+      <!-- 2 -->
+
         <q-select
           outlined
           dense
-          v-model="producto.nombre"
+          v-model="producto.codigo_qr"
           use-input
           input-debounce="0"
           label="Buscar Productos"
           :options="productoStore.productos"
-          option-label="nombre"
+          option-label="codigo_qr"
           option-value="id"
-          @filter="filterFn"
-          style="width: 250px"
+          @filter="filterFnCodigo"
+
           v-if="barras"
         >
         <template v-slot:no-option>
@@ -251,54 +258,29 @@
             v-if="producto.nombre"
             name="cancel"
             class="cursor-pointer"
-            @click.stop.prevent="producto.nombre = null"
+           @click.stop.prevent="producto.codigo_qr = null"
           />
         </template>
       </q-select>
-        </div>
-        <div class="col-md-4 col-sm-12 q-mb-md" id="nuevo">
-          <q-toggle
-        v-model="nuevo"
-        checked-icon="check"
-        color="green"
-        unchecked-icon="clear"
-        label="Crear Producto"
-      />
-        <q-select
+      <!-- 3 -->
+
+      <q-input
+      v-if="nuevo"
+          class=" col-12 q-mb-md"
+          type="text"
           outlined
           dense
           v-model="producto.nombre"
-          use-input
-          input-debounce="0"
-          label="Buscar Productos"
-          :options="productoStore.productos"
-          option-label="nombre"
-          option-value="id"
-          @filter="filterFn"
-          style="width: 250px"
-          v-if="nuevo"
-        >
-        <template v-slot:no-option>
-          <q-item>
-            <q-item-section class="text-grey">
-              No results
-            </q-item-section>
-          </q-item>
-        </template>
-        <!-- Slot para el icono clearable -->
-        <template v-slot:append>
-          <q-icon
-            v-if="producto.nombre"
-            name="cancel"
-            class="cursor-pointer"
-            @click.stop.prevent="producto.nombre = null"
-          />
-        </template>
-      </q-select>
+          label="Nombre Producto *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese nombre del Producto']"
+        />
         </div>
+
+
         <!-- Otros campos aquí -->
          <q-input
-          class="col-md-4 col-sm-12 q-mb-md"
+          class="col-md-6 col-sm-12 q-mb-md"
           type="text"
           outlined
           dense
@@ -308,7 +290,7 @@
           :rules="[ val => val && val.length > 0 || 'Ingrese la Cantidad']"
         />
          <q-input
-          class="col-md-4 col-sm-12 q-mb-md"
+          class="col-md-6 col-sm-12 q-mb-md"
           outlined
           dense
           v-model="producto.marca"
@@ -435,9 +417,11 @@ const tab = ref('facturas')
       imagen: '',
       codigo_qr: ''
     })
-   const third = ref(false)
+   const third = ref(true)
     const barras = ref(false)
     const nuevo = ref(false)
+
+
     const filterFn = (val, update) => {
   if (val === '') {
     update(() => {
@@ -449,13 +433,13 @@ const tab = ref('facturas')
 
   update(() => {
     const needle = val.toLowerCase()
-    productoStore.productos = productoStore.productos.filter(
+    const filteredProducts = productoStore.productos.filter(
       v => v.nombre.toLowerCase().indexOf(needle) > -1
     )
+    productoStore.productos = filteredProducts
 
     // Si hay un producto seleccionado, llenar los datos del producto
     if (productoStore.productos.length === 1) {
-      // Copiar los datos del producto seleccionado al objeto producto
       const selectedProduct = productoStore.productos[0]
       producto.value = {
         nombre: selectedProduct.nombre,
@@ -471,6 +455,12 @@ const tab = ref('facturas')
     } else {
       // Si se quita la selección, limpiar los campos del producto
       limpiarCamposProducto()
+
+      // Si no hay resultados, activar el segundo toggle y desactivar el primero
+      if (productoStore.productos.length === 0) {
+        barras.value = true
+        third.value = false
+      }
     }
   })
 }
@@ -488,7 +478,52 @@ function limpiarCamposProducto() {
     codigo_qr: ''
   }
 }
+//qr
+const filterFnCodigo = (val, update) => {
+  if (val === '') {
+    update(() => {
+      productoStore.obtenerProducto()
+      limpiarCamposProducto()
+    })
+    return
+  }
 
+  update(() => {
+    const needle = val.toLowerCase()
+    const filteredProducts = productoStore.productos.filter(
+      v => v.codigo_qr.toLowerCase().indexOf(needle) > -1
+    )
+    productoStore.productos = filteredProducts
+
+    // Si hay un producto seleccionado, llenar los datos del producto
+    if (productoStore.productos.length === 1) {
+      const selectedProduct = productoStore.productos[0]
+      producto.value = {
+        nombre: selectedProduct.nombre,
+        cantidad: selectedProduct.cantidad,
+        descripcion: selectedProduct.descripcion,
+        observacion: selectedProduct.observacion,
+        marca: selectedProduct.marca,
+        precio_compra: selectedProduct.precio_compra,
+        precio_venta: selectedProduct.precio_venta,
+        imagen: selectedProduct.imagen,
+        codigo_qr: selectedProduct.codigo_qr
+      }
+    } else {
+      // Si se quita la selección, limpiar los campos del producto
+      limpiarCamposProducto()
+
+      // Si no hay resultados, desactivar el toggle de barras y activar el nuevo toggle
+      if (productoStore.productos.length === 0) {
+        barras.value = false
+        nuevo.value = true
+      }
+    }
+  })
+}
+
+
+//fn qr
 
 
    onMounted(async() => {
