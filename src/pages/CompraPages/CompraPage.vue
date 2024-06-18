@@ -164,7 +164,7 @@
 
 
      </div>
-      </q-step>
+                </q-step>
 
       <q-step
         :name="2"
@@ -210,7 +210,8 @@
           option-label="nombre"
           option-value="id"
           @filter="filterFn"
-          v-if="third"
+          v-if="third && !barras && !nuevo"
+
         >
         <template v-slot:no-option>
           <q-item>
@@ -243,7 +244,7 @@
           option-value="id"
           @filter="filterFnCodigo"
 
-          v-if="barras"
+          v-else-if="barras && !third && !nuevo"
         >
         <template v-slot:no-option>
           <q-item>
@@ -255,7 +256,7 @@
         <!-- Slot para el icono clearable -->
         <template v-slot:append>
           <q-icon
-            v-if="producto.nombre"
+            v-if="producto.codigo_qr"
             name="cancel"
             class="cursor-pointer"
            @click.stop.prevent="producto.codigo_qr = null"
@@ -265,12 +266,13 @@
       <!-- 3 -->
 
       <q-input
-      v-if="nuevo"
+
+          v-else-if="nuevo && !barras && !third"
           class=" col-12 q-mb-md"
           type="text"
           outlined
           dense
-          v-model="producto.nombre"
+          v-model="nuevoNombre"
           label="Nombre Producto *"
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese nombre del Producto']"
@@ -345,16 +347,28 @@
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese la Imagen']"
         />
-       {{ productoStore.productos }}
+
+
+
+            <q-btn @click="agregarLista" color="blue-grey" label="Agregar"   />
+
+
        </div>
 
 
 
 </div>
       </q-step>
-
       <q-step
         :name="3"
+        title="Productos Cargados"
+        icon="shop"
+        v-if="listaProductos.length > 0"
+      >
+        <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductos" />
+      </q-step>
+      <q-step
+        :name="4"
         title="Codigo QR"
         icon="qr_code"
       >
@@ -365,7 +379,7 @@
 
       <template v-slot:navigation>
         <q-stepper-navigation>
-          <q-btn @click="validarYGuardarData" color="primary" :label="step === 3 ? 'Finalizar' : 'Continuar'"  :disable="factura.no_documento ===''" />
+          <q-btn @click="validarYGuardarData" color="primary" :label="step === 4 ? 'Finalizar' : 'Continuar'"  :disable="factura.no_documento ===''"  />
           <q-btn v-if="step > 1" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
         </q-stepper-navigation>
       </template>
@@ -388,7 +402,7 @@ import { computed, onMounted, ref, watch, onBeforeUnmount  } from "vue";
 import { useFacturaStore } from "src/stores/factura.store";
 import { useCompraStore } from 'src/stores/compra.store';
 import { useQuasar } from "quasar";
-
+import  TablaGeneral  from "src/components/Table/TablaGeneral.vue"
 const $q = useQuasar();
 const tab = ref('facturas')
    const step= ref(1)
@@ -541,16 +555,118 @@ if (step.value === 1) {
       step.value++
 
     } catch (error) {
-
+      console.log('error al guardar factura')
     }
 
 } else if (step.value === 2) {
-  step.value++
-} else if (step.value === 3) {
+    try {
+        // Crear un array de promesas para todas las operaciones
+        const promises = listaProductos.value.map(async (producto) => {
+            // Verificar que producto es un objeto y tiene o no tiene la propiedad id según sea necesario
+            if (!producto || typeof producto !== 'object') {
+                throw new Error('Producto inválido');
+            }
+
+            if ('id' in producto) {
+                console.log(`Actualizando producto con ID: ${producto.id}`);
+                await productoStore.updateProducto(producto);
+            } else {
+                console.log('Creando nuevo producto');
+                await productoStore.guardarProducto(producto);
+            }
+        });
+
+        // Ejecutar todas las promesas en paralelo
+        await Promise.all(promises);
+
+        // Incrementar el step después de completar todas las operaciones
+        step.value++;
+    } catch (error) {
+        console.error('Error al procesar productos:', error);
+        // Manejar el error apropiadamente
+    }
+}
+else if (step.value === 3) {
   step.value++
 }
 
  }
+const nuevoNombre = ref('')
+ // lista productos
+ const listaProductos = ref([]);
+
+const agregarLista = () => {
+  // Verificar si existe producto.nombre para determinar si es nuevo o existente
+  if (producto.value.nombre) {
+    // Producto existente: Copia profunda del producto para evitar mutaciones accidentales
+    const nuevoProducto = {
+      ...producto.value.nombre,
+      cantidad: producto.value.cantidad,
+      descripcion: producto.value.descripcion,
+      observacion: producto.value.observacion,
+      marca: producto.value.marca,
+      precio_compra: producto.value.precio_compra,
+      precio_venta: producto.value.precio_venta,
+      imagen: producto.value.imagen,
+      codigo_qr: producto.value.codigo_qr,
+      createdAt: producto.value.createdAt,
+      updatedAt: producto.value.updatedAt
+    };
+
+    // Agregar el producto a la lista de productos
+    listaProductos.value.push(nuevoProducto);
+  } else {
+    // Nuevo producto: Crear un objeto nuevoProducto
+    const nuevoProducto = {
+      nombre: nuevoNombre.value,
+      cantidad: producto.value.cantidad,
+      descripcion: producto.value.descripcion,
+      observacion: producto.value.observacion,
+      marca: producto.value.marca,
+      precio_compra: producto.value.precio_compra,
+      precio_venta: producto.value.precio_venta,
+      imagen: producto.value.imagen,
+      codigo_qr: producto.value.codigo_qr,
+      createdAt: new Date().toISOString(), // Puedes establecer la fecha actual
+      updatedAt: new Date().toISOString() // Puedes establecer la fecha actual
+    };
+
+    // Agregar el producto nuevo a la lista de productos
+    listaProductos.value.push(nuevoProducto);
+  }
+
+  // Limpiar el formulario o reiniciar valores después de agregarlo (opcional)
+  reiniciarFormulario();
+};
+
+
+// Función para reiniciar el formulario después de agregar un producto
+const reiniciarFormulario = () => {
+  producto.value = {
+    nombre: '',
+    cantidad: '',
+    marca: '',
+    descripcion: '',
+    observacion: '',
+    precio_compra: '',
+    precio_venta: '',
+    imagen: '',
+  };
+};
+ //fin lista
+
+ const colProductos = [
+
+ { name: 'nombre', label: 'Nombre', field: 'nombre' },
+  { name: 'cantidad', label: 'Cantidad', field: 'cantidad' },
+  { name: 'descripcion', label: 'Descripción', field: 'descripcion' },
+  { name: 'observacion', label: 'Observación', field: 'observacion' },
+  { name: 'marca', label: 'Marca', field: 'marca' },
+  { name: 'precio_compra', label: 'Precio Compra', field: 'precio_compra' },
+  { name: 'precio_venta', label: 'Precio Venta', field: 'precio_venta' },
+  { name: 'imagen', label: 'Imagen', field: 'imagen' },
+  { name: 'codigo_qr', label: 'Código QR', field: 'codigo_qr' }
+ ]
   </script>
 
 

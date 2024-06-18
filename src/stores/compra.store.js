@@ -41,6 +41,18 @@ export const useCompraStore = defineStore({
           throw error;
         }
       },
+      async updateProducto(payload) {
+        try {
+          const res = await axios.put(`http://localhost:3000/producto/id/${payload.id}`, payload);
+          console.log('Producto actualizado:', res.data);
+          return res.data; // Opcional: retornar la respuesta si necesitas manejarla en otro lugar
+        } catch (error) {
+          console.error('Error al actualizar el producto:', error);
+          throw error;
+        }
+      },
+
+
       async buscarProductoPorNombre(nombre) {
         try {
           const response = await axios.get(`http://localhost:3000/producto?nombre=${nombre}`);
