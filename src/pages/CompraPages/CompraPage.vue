@@ -338,7 +338,7 @@
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Venta']"
         />
-        <q-input
+        <!-- <q-input
           class="col-md-4 col-sm-12 q-mb-md"
           outlined
           dense
@@ -346,9 +346,13 @@
           label="Imagen *"
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese la Imagen']"
-        />
+        /> -->
+        <div class="col-md-4 col-sm-12 q-mb-md q-gutter-sm" >
 
-
+          <input type="file" @change="handleFileChange" />
+            <p></p>
+            <img :src="producto.imagen" alt="" v-if="producto.imagen" width="100px" height="100px" >
+        </div>
 
             <q-btn @click="agregarLista" color="blue-grey" label="Agregar"   />
 
@@ -428,9 +432,12 @@ const tab = ref('facturas')
       marca: '',
       precio_compra: '',
       precio_venta: '',
-      imagen: '',
+      imagen: null,
       codigo_qr: ''
     })
+    const handleFileChange = (event) => {
+  producto.value.imagen = event.target.files[0]; // Almacena el archivo seleccionado
+  };
    const third = ref(true)
     const barras = ref(false)
     const nuevo = ref(false)
@@ -472,8 +479,23 @@ const tab = ref('facturas')
 
       // Si no hay resultados, activar el segundo toggle y desactivar el primero
       if (productoStore.productos.length === 0) {
-        barras.value = true
-        third.value = false
+        $q.dialog({
+          title: 'Producto no encontrado',
+          message: 'No se encontró el producto. ¿Desea crear uno nuevo?',
+          cancel: true,
+          persistent: true
+        }).onOk(() => {
+          // Mostrar campos para crear un nuevo producto
+          nuevo.value = true;
+          third.value = false;
+          barras.value = false;
+        }).onCancel(() => {
+          // Pasar a la búsqueda por código QR
+          barras.value = true
+          third.value = false
+          nuevo.value = false
+        });
+
       }
     }
   })
@@ -529,14 +551,29 @@ const filterFnCodigo = (val, update) => {
 
       // Si no hay resultados, desactivar el toggle de barras y activar el nuevo toggle
       if (productoStore.productos.length === 0) {
-        barras.value = false
-        nuevo.value = true
+        $q.dialog({
+          title: 'Producto no encontrado',
+          message: 'No se encontró el producto. ¿Desea crear uno nuevo?',
+          cancel: true,
+          persistent: true
+        }).onOk(() => {
+          // Mostrar campos para crear un nuevo producto
+          nuevo.value = true;
+          third.value = false;
+          barras.value = false;
+        }).onCancel(() => {
+
+          barras.value = false
+          third.value = false
+          nuevo.value = true
+        });
+
       }
     }
   })
 }
 
-
+const nuevoNombre = ref('')
 //fn qr
 
 
@@ -560,6 +597,7 @@ if (step.value === 1) {
 
 } else if (step.value === 2) {
     try {
+          //TODO  PREGUNTAR CHINO si es para mas de 1 producto
         // Crear un array de promesas para todas las operaciones
         const promises = listaProductos.value.map(async (producto) => {
             // Verificar que producto es un objeto y tiene o no tiene la propiedad id según sea necesario
@@ -568,17 +606,45 @@ if (step.value === 1) {
             }
 
             if ('id' in producto) {
-                console.log(`Actualizando producto con ID: ${producto.id}`);
+              const formData = new FormData();
+                formData.append('nombre', producto.nombre);
+                formData.append('cantidad', producto.cantidad);
+                formData.append('descripcion', producto.descripcion);
+                formData.append('observacion', producto.observacion);
+                formData.append('marca', producto.marca);
+                formData.append('precio_compra', producto.precio_compra);
+                formData.append('precio_venta', producto.precio_venta);
+                formData.append('codigo_qr', producto.codigo_qr);
+
+                if (producto.imagen) {
+                  formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
+                }
+
                 await productoStore.updateProducto(producto);
             } else {
+              const formData = new FormData();
+                formData.append('nombre', nuevoNombre);
+                formData.append('cantidad', producto.cantidad);
+                formData.append('descripcion', producto.descripcion);
+                formData.append('observacion', producto.observacion);
+                formData.append('marca', producto.marca);
+                formData.append('precio_compra', producto.precio_compra);
+                formData.append('precio_venta', producto.precio_venta);
+                formData.append('codigo_qr', producto.codigo_qr);
+
+                if (producto.imagen) {
+                  formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
+                }
                 console.log('Creando nuevo producto');
                 await productoStore.guardarProducto(producto);
+
+                //TODO puede que funcione, despues de step 2, ya guardo los productos, pero segun yo lista de productos aun tiene los productos, entonces hacer un nuevo get y comparar con los de lista y obtener los ids
             }
         });
 
         // Ejecutar todas las promesas en paralelo
         await Promise.all(promises);
-
+          console.log(listaProductos.value, 'listaProductos')
         // Incrementar el step después de completar todas las operaciones
         step.value++;
     } catch (error) {
@@ -587,11 +653,23 @@ if (step.value === 1) {
     }
 }
 else if (step.value === 3) {
+  await productoStore.obtenerProducto()
+  const productosCompletos = computed(() => {
+  return listaProductos.value.map(producto => {
+    const encontrado = productoStore.productos.find(p => p.nombre === producto.nombre);
+    return encontrado ? { ...producto, id: encontrado.id } : producto;
+  });
+});
+  console.log(productosCompletos.value, 'id')
+  step.value++
+}else if (step.value === 4) {
+  //TODO guardar productos y factura en el nuevo
+
   step.value++
 }
 
  }
-const nuevoNombre = ref('')
+
  // lista productos
  const listaProductos = ref([]);
 
@@ -664,7 +742,6 @@ const reiniciarFormulario = () => {
   { name: 'marca', label: 'Marca', field: 'marca' },
   { name: 'precio_compra', label: 'Precio Compra', field: 'precio_compra' },
   { name: 'precio_venta', label: 'Precio Venta', field: 'precio_venta' },
-  { name: 'imagen', label: 'Imagen', field: 'imagen' },
   { name: 'codigo_qr', label: 'Código QR', field: 'codigo_qr' }
  ]
   </script>

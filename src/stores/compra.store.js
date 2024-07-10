@@ -26,7 +26,6 @@ export const useCompraStore = defineStore({
       try {
         const res = await axios.get('http://localhost:3000/producto/');
         this.productos = res.data.productos
-        console.log(this.productos, 'productos')
       } catch (error) {
         console.error('Error al cargar facturas:', error);
         throw error;
@@ -34,17 +33,33 @@ export const useCompraStore = defineStore({
     },
     async guardarProducto(payload) {
         try {
-          const res = await axios.post('http://localhost:3000/producto/', payload);
-          console.log(payload, 'producto hecha')
+          console.log(payload, 'payload')
+          const formData = new FormData();
+        for (const key in payload) {
+          if (payload.hasOwnProperty(key)) {
+            formData.append(key, payload[key]);
+          }
+        }
+        console.log(formData,'formData')
+          const res = await axios.post('http://localhost:3000/producto/', formData);
+          console.log(formData, 'producto redi')
         } catch (error) {
           console.error('Error al enviar la producto:', error);
           throw error;
         }
       },
       async updateProducto(payload) {
+
         try {
-          const res = await axios.put(`http://localhost:3000/producto/id/${payload.id}`, payload);
-          console.log('Producto actualizado:', res.data);
+          const formData = new FormData();
+        for (const key in payload) {
+          if (payload.hasOwnProperty(key)) {
+            formData.append(key, payload[key]);
+          }
+        }
+
+          const res = await axios.put(`http://localhost:3000/producto/id/${payload.id}`, formData);
+
           return res.data; // Opcional: retornar la respuesta si necesitas manejarla en otro lugar
         } catch (error) {
           console.error('Error al actualizar el producto:', error);
