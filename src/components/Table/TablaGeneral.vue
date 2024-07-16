@@ -2,7 +2,7 @@
   <div>
     <q-table
       flat bordered
-      title="Productos Agregados"
+      :title="title"
       :rows="rowsProp"
       :columns="columnsProp"
       row-key="name"
@@ -49,5 +49,9 @@
 import { ref } from 'vue';
 
 // Define las props recibidas
-const { columnsProp, rowsProp } = defineProps(['columnsProp', 'rowsProp']);
+const props = defineProps({
+  columnsProp: Array,
+  rowsProp: Array,
+  title: String
+});
 </script>

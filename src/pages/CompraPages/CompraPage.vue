@@ -30,7 +30,7 @@
           </q-tab-panel>
 
           <q-tab-panel name="productos" class="bg-grey-1 text-white">
-           tabla
+            <TablaGeneral :columns-prop="colProductos" :rows-prop="productoStore.productos" :title="'Productos'" />
           </q-tab-panel>
 
             <q-tab-panel name="nuevas" class="bg-grey-1 text-dark">
@@ -42,6 +42,8 @@
                 ref="stepper"
                 color="primary"
                 animated
+                flat
+                class="bg-grey-1"
               >
                 <q-step
                   :name="1"
@@ -164,7 +166,7 @@
 
 
      </div>
-                </q-step>
+       </q-step>
 
       <q-step
         :name="2"
@@ -282,7 +284,7 @@
 
         <!-- Otros campos aquí -->
          <q-input
-          class="col-md-6 col-sm-12 q-mb-md"
+          class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
           type="text"
           outlined
           dense
@@ -292,7 +294,7 @@
           :rules="[ val => val && val.length > 0 || 'Ingrese la Cantidad']"
         />
          <q-input
-          class="col-md-6 col-sm-12 q-mb-md"
+          class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
           outlined
           dense
           v-model="producto.marca"
@@ -321,7 +323,7 @@
           :rules="[ val => val && val.length > 0 || 'Ingrese la Observacion']"
         />
         <q-input
-          class="col-md-4 col-sm-12 q-mb-md"
+          class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
           outlined
           dense
           v-model="producto.precio_compra"
@@ -330,7 +332,7 @@
           :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Compra']"
         />
         <q-input
-          class="col-md-4 col-sm-12 q-mb-md"
+          class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
           outlined
           dense
           v-model="producto.precio_venta"
@@ -338,24 +340,42 @@
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Venta']"
         />
-        <!-- <q-input
-          class="col-md-4 col-sm-12 q-mb-md"
+
+        <div class="col-md-4 col-sm-12 col-xs-12 q-gutter-sm q-mb-md">
+          <q-input
+          class="col-8"
           outlined
           dense
-          v-model="producto.imagen"
-          label="Imagen *"
+          v-model="producto.codigo_qr"
+          label="Codigo de barras *"
           lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese la Imagen']"
-        /> -->
-        <div class="col-md-4 col-sm-12 q-mb-md q-gutter-sm" >
+          :rules="[ val => val && val.length > 0 || 'Ingrese el Codigo de barras']"
+        />
+          <q-btn
+          class="col-2 float-right"
+          label="Generar Codigo"
+          color="purple"
+          @click="generarCodigoBarra"
+        />
+        <!-- <q-btn
+        class="q-ml-sm"
+        label="Generar PDF"
+        @click="generarPDF"
+      /> -->
+      <!-- <svg id="barcode" class="barcode"></svg> -->
 
-          <input type="file" @change="handleFileChange" />
+        </div>
+
+        <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
+
+          <input type="file" @change="handleFileChange"  class="col-md-4 col-sm-12 q-mb-md" />
             <p></p>
             <img :src="producto.imagen" alt="" v-if="producto.imagen" width="100px" height="100px" >
         </div>
 
-            <q-btn @click="agregarLista" color="blue-grey" label="Agregar"   />
-
+        <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
+            <q-btn @click="agregarLista" color="blue-grey" label="Agregar"  class="col-4  q-mb-md float-right	"   />
+          </div>
 
        </div>
 
@@ -369,7 +389,7 @@
         icon="shop"
         v-if="listaProductos.length > 0"
       >
-        <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductos" />
+        <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductos" :title="'Productos Agregados'" />
       </q-step>
       <q-step
         :name="4"
@@ -402,11 +422,15 @@
 
   <script setup >
 
-import { computed, onMounted, ref, watch, onBeforeUnmount  } from "vue";
+import { computed, onMounted, ref, watch, onBeforeUnmount, nextTick  } from "vue";
 import { useFacturaStore } from "src/stores/factura.store";
 import { useCompraStore } from 'src/stores/compra.store';
 import { useQuasar } from "quasar";
 import  TablaGeneral  from "src/components/Table/TablaGeneral.vue"
+
+import JsBarcode from 'jsbarcode';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 const $q = useQuasar();
 const tab = ref('facturas')
    const step= ref(1)
@@ -438,6 +462,80 @@ const tab = ref('facturas')
     const handleFileChange = (event) => {
   producto.value.imagen = event.target.files[0]; // Almacena el archivo seleccionado
   };
+
+
+  const generarCodigoBarra = () => {
+  const generarRandomDigits = (length) => {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += Math.floor(Math.random() * 10);
+    }
+    return result;
+  };
+
+  const calcularChecksum = (codigo) => {
+    let suma = 0;
+    for (let i = 0; i < codigo.length; i++) {
+      suma += parseInt(codigo[i]) * (i % 2 === 0 ? 1 : 3);
+    }
+    const mod = suma % 10;
+    return mod === 0 ? 0 : 10 - mod;
+  };
+
+  const codigoBase = generarRandomDigits(12);
+  const checksum = calcularChecksum(codigoBase);
+  const codigoQR = codigoBase + checksum;
+
+  producto.value.codigo_qr = codigoQR;
+
+  // Crear un canvas para el código de barras
+  const canvas = document.createElement('canvas');
+  canvas.width = 200; // Ancho del canvas ajustado para una buena resolución
+  canvas.height = 80; // Altura del canvas ajustado para una buena resolución
+  JsBarcode(canvas, codigoQR, {
+    format: 'CODE128',
+    displayValue: true,
+    textMargin: 4, // Margen entre el código de barras y el texto
+    fontSize: 16, // Tamaño de fuente para los números
+    fontOptions: 'bold'
+  });
+
+  const imgData = canvas.toDataURL('image/png');
+
+  // Crear un nuevo PDF
+  const doc = new jsPDF();
+  const width = 60; // Ancho de la imagen en el PDF
+  const height = 30; // Altura de la imagen en el PDF
+  const margin = 10; // Margen entre imágenes
+
+  // Añadir la imagen del código de barras según la cantidad
+  const cantidad = producto.value.cantidad;
+  let x = 10; // Coordenada X inicial
+  let y = 10; // Coordenada Y inicial
+
+  for (let i = 0; i < cantidad; i++) {
+    doc.addImage(imgData, 'PNG', x, y, width, height);
+
+    // Actualizar las coordenadas X e Y para la próxima imagen
+    x += width + margin;
+    if (x + width > doc.internal.pageSize.getWidth()) { // Si la siguiente imagen excede el ancho de la página
+      x = 10; // Reiniciar X
+      y += height + margin; // Mover Y hacia abajo
+    }
+
+    if (y + height > doc.internal.pageSize.getHeight()) { // Si la siguiente imagen excede el alto de la página
+      doc.addPage(); // Añadir una nueva página
+      x = 10; // Reiniciar X
+      y = 10; // Reiniciar Y
+    }
+  }
+
+  // Guardar el PDF con el nombre especificado en producto.value.nombre
+  const pdfFileName = 'producto.pdf';
+  doc.save(pdfFileName);
+};
+
+
    const third = ref(true)
     const barras = ref(false)
     const nuevo = ref(false)
@@ -451,6 +549,7 @@ const tab = ref('facturas')
     })
     return
   }
+
 
   update(() => {
     const needle = val.toLowerCase()
@@ -792,5 +891,6 @@ const reiniciarFormulario = () => {
   border: 1px solid #ddd;
   border-radius: 4px;
 }
+
 
   </style>
