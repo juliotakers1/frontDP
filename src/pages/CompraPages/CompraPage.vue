@@ -281,14 +281,19 @@
         />
         </div>
 
+        <div class="col-12">
 
+          <p v-if="producto.cantidad" class="column text-existencia" >Existencia: {{producto.cantidad}}</p>
+          <p v-if="nuevaCantidad" class="column existencia" >Existencia Total:  {{ Number(producto.cantidad) + Number(nuevaCantidad) }}</p>
         <!-- Otros campos aquí -->
-         <q-input
+
+        </div>
+        <q-input
           class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
           type="text"
           outlined
           dense
-          v-model="producto.cantidad"
+          v-model="nuevaCantidad"
           label="Cantidad *"
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese la Cantidad']"
@@ -357,12 +362,7 @@
           color="purple"
           @click="generarCodigoBarra"
         />
-        <!-- <q-btn
-        class="q-ml-sm"
-        label="Generar PDF"
-        @click="generarPDF"
-      /> -->
-      <!-- <svg id="barcode" class="barcode"></svg> -->
+
 
         </div>
 
@@ -370,7 +370,7 @@
 
           <input type="file" @change="handleFileChange"  class="col-md-4 col-sm-12 q-mb-md" />
             <p></p>
-            <img :src="producto.imagen" alt="" v-if="producto.imagen" width="100px" height="100px" >
+            <img :src="imagePreview" alt="" v-if="imagePreview" width="100px" height="100px">
         </div>
 
         <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
@@ -430,7 +430,6 @@ import  TablaGeneral  from "src/components/Table/TablaGeneral.vue"
 
 import JsBarcode from 'jsbarcode';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 const $q = useQuasar();
 const tab = ref('facturas')
    const step= ref(1)
@@ -459,9 +458,17 @@ const tab = ref('facturas')
       imagen: null,
       codigo_qr: ''
     })
-    const handleFileChange = (event) => {
-  producto.value.imagen = event.target.files[0]; // Almacena el archivo seleccionado
-  };
+    const imagePreview = ref(null)
+
+const handleFileChange = (event) => {
+  const file = event.target.files[0]
+  producto.value.imagen = file // Almacena el archivo seleccionado
+  if (file && file.type.startsWith('image/')) {
+    imagePreview.value = URL.createObjectURL(file)
+  } else {
+    imagePreview.value = null
+  }
+}
 
 
   const generarCodigoBarra = () => {
@@ -673,6 +680,7 @@ const filterFnCodigo = (val, update) => {
 }
 
 const nuevoNombre = ref('')
+const nuevaCantidad = ref('') //TODO cambiar cantidad por nueva, y que al update se sume, si es nuevo solo que lo agruegue, y si es update que aparezca arriba del input stock
 //fn qr
 
 
@@ -700,6 +708,7 @@ if (step.value === 1) {
         // Crear un array de promesas para todas las operaciones
         const promises = listaProductos.value.map(async (producto) => {
             // Verificar que producto es un objeto y tiene o no tiene la propiedad id según sea necesario
+            producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value)
             if (!producto || typeof producto !== 'object') {
                 throw new Error('Producto inválido');
             }
@@ -738,6 +747,8 @@ if (step.value === 1) {
                 await productoStore.guardarProducto(producto);
 
                 //TODO puede que funcione, despues de step 2, ya guardo los productos, pero segun yo lista de productos aun tiene los productos, entonces hacer un nuevo get y comparar con los de lista y obtener los ids
+                //TODO agregar tablas temporales en la bd, luego en step 3 al 4 enviar a las originales y puedo obtener las tablas como el metodo de abajo
+                //TODO factura pendiente y mostrar como terminar
             }
         });
 
@@ -892,5 +903,14 @@ const reiniciarFormulario = () => {
   border-radius: 4px;
 }
 
-
+.existencia {
+  font-weight: bold;
+  color: red;
+  margin: 0;
+}
+.text-existencia {
+  font-weight: bold;
+  color: rebeccapurple;
+  margin: 0;
+}
   </style>
