@@ -18,7 +18,8 @@ export const useCompraStore = defineStore({
         imagen: '',
         codigo_qr: ''
     },
-    productos: []
+    productos: [],
+    productosTemporales: []
 
   }),
   actions: {
@@ -28,6 +29,19 @@ export const useCompraStore = defineStore({
         this.productos = res.data.productos
       } catch (error) {
         console.error('Error al cargar facturas:', error);
+        throw error;
+      }
+    },
+    async obtenerProductoTemporales(usuario) {
+      try {
+        // Enviar el nombre del usuario como parámetro de consulta
+        const res = await axios.get('http://localhost:3000/productoTemporal/', {
+          params: { usuario }
+        });
+        this.productosTemporales = res.data.productosTemporales;
+        console.log('productosTemporales:', this.productosTemporales);
+      } catch (error) {
+        console.error('Error al cargar productos temporales:', error);
         throw error;
       }
     },
@@ -48,6 +62,23 @@ export const useCompraStore = defineStore({
           throw error;
         }
       },
+      async guardarProductoTemporal(payload) {
+        try {
+          console.log(payload, 'payload')
+          const formData = new FormData();
+        for (const key in payload) {
+          if (payload.hasOwnProperty(key)) {
+            formData.append(key, payload[key]);
+          }
+        }
+        console.log(formData,'formData')
+          const res = await axios.post('http://localhost:3000/productoTemporal/', formData);
+          console.log(formData, 'producto redi')
+        } catch (error) {
+          console.error('Error al enviar la producto:', error);
+          throw error;
+        }
+      },
       async updateProducto(payload) {
 
         try {
@@ -59,6 +90,24 @@ export const useCompraStore = defineStore({
         }
 
           const res = await axios.put(`http://localhost:3000/producto/id/${payload.id}`, formData);
+
+          return res.data; // Opcional: retornar la respuesta si necesitas manejarla en otro lugar
+        } catch (error) {
+          console.error('Error al actualizar el producto:', error);
+          throw error;
+        }
+      },
+      async updateProductoTemporal(payload) {
+
+        try {
+          const formData = new FormData();
+        for (const key in payload) {
+          if (payload.hasOwnProperty(key)) {
+            formData.append(key, payload[key]);
+          }
+        }
+
+          const res = await axios.put(`http://localhost:3000/productoTemporal/id/${payload.id}`, formData);
 
           return res.data; // Opcional: retornar la respuesta si necesitas manejarla en otro lugar
         } catch (error) {

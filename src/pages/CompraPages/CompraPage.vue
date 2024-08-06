@@ -16,8 +16,15 @@
         </q-tabs>
 
 
-      </q-card>
 
+      </q-card>
+      <q-banner class="bg-negative text-white q-mt-md" v-if="productoStore.productosTemporales && facturaStore.facturasTemporales">
+        Existen productos & facturas pendientes
+        <template v-slot:action>
+          <q-btn flat color="yellow" label="Limpiar" />
+          <!-- <q-btn flat color="white" label="Cargar" @click="update" /> -->
+        </template>
+      </q-banner>
       <q-card>
 
 
@@ -86,6 +93,7 @@
                   lazy-rules
                   :rules="[ val => val && val.length > 0 || 'Ingrese la Fecha de Emision']"
                 />
+
                 <q-input
                 class="col-3 q-mb-md"
                   outlined
@@ -386,15 +394,15 @@
       <q-step
         :name="3"
         title="Productos Cargados"
-        icon="shop"
-        v-if="listaProductos.length > 0"
+        icon="list"
+        v-if="listaProductosTemp.length > 0"
       >
-        <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductos" :title="'Productos Agregados'" />
+        <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductosTemp" :title="'Productos Agregados'" />
       </q-step>
       <q-step
         :name="4"
-        title="Codigo QR"
-        icon="qr_code"
+        title="Finalizar"
+        icon="star"
       >
         This step won't show up because it is disabled.
       </q-step>
@@ -425,9 +433,11 @@
 import { computed, onMounted, ref, watch, onBeforeUnmount, nextTick  } from "vue";
 import { useFacturaStore } from "src/stores/factura.store";
 import { useCompraStore } from 'src/stores/compra.store';
+import { useAuthStore } from 'src/stores/auth.store';
+import { usefacturaFinalStore } from "src/stores/compfinal.store";
 import { useQuasar } from "quasar";
 import  TablaGeneral  from "src/components/Table/TablaGeneral.vue"
-
+import { nanoid } from 'nanoid';
 import JsBarcode from 'jsbarcode';
 import jsPDF from 'jspdf';
 const $q = useQuasar();
@@ -435,6 +445,9 @@ const tab = ref('facturas')
    const step= ref(1)
     const facturaStore = useFacturaStore()
     const productoStore = useCompraStore();
+    const facturaFinalStore = usefacturaFinalStore()
+    const authStore = useAuthStore()
+    const usr = authStore.user.email
     const factura = ref({
     no_documento: '',
     tipo_documento: '',
@@ -447,6 +460,7 @@ const tab = ref('facturas')
     tipo_pago: '',
     tipo_factura: '',
     })
+
     const producto = ref({
       nombre: '',
       cantidad: '',
@@ -457,6 +471,12 @@ const tab = ref('facturas')
       precio_venta: '',
       imagen: null,
       codigo_qr: ''
+    })
+    const facturaFinal = ref({
+      id_factura: '',
+      id_producto: '',
+      precio_compra: '',
+      precio_venta: '',
     })
     const imagePreview = ref(null)
 
@@ -686,6 +706,38 @@ const nuevaCantidad = ref('') //TODO cambiar cantidad por nueva, y que al update
 
    onMounted(async() => {
      await productoStore.obtenerProducto()
+     await productoStore.obtenerProductoTemporales(authStore.user.email)
+     await facturaStore.obtenerFacturaTemporal(authStore.user.email)
+     if(productoStore.productosTemporales || facturaStore.facturasTemporales) {
+      tab.value = 'nuevas'
+      try {
+          // Cargar facturas temporales
+          const facturaTemporal = facturaStore.facturasTemporales[0]; // O elige el índice adecuado
+          // Actualizar inputs con los datos de la primera factura temporal
+          factura.value = {
+            no_documento: facturaTemporal.no_documento,
+          tipo_documento: facturaTemporal.tipo_documento,
+          fecha_emision: facturaTemporal.fecha_emision,
+          fecha_pago: facturaTemporal.fecha_pago,
+          razon_social_proveedor: facturaTemporal.razon_social_proveedor,
+          gastos_transporte: facturaTemporal.gastos_transporte,
+          telefono_vendedor: facturaTemporal.telefono_vendedor,
+          nombre_vendedor: facturaTemporal.nombre_vendedor,
+          tipo_pago: facturaTemporal.tipo_pago,
+          tipo_factura: facturaTemporal.tipo_factura
+          }
+
+
+          listaProductosTemp.value = productoStore.productosTemporales;
+          console.log(listaProductosTemp.value, 'listaaaaa')
+        } catch (error) {
+          console.error('Error al actualizar datos:', error);
+        }
+     } else {
+
+      tab.value = 'facturas'
+     }
+
    })
 
 
@@ -695,18 +747,54 @@ const validarYGuardarData = async () => {
 if (step.value === 1) {
 
     try {
-      // facturaStore.guardarFactura(factura.value)
-      step.value++
+
+      //TODO validar que si es pendiente solo de step al otro si es nueva que guarde en temporal
+      if( facturaStore.facturasTemporales) {
+        step.value++
+
+      } else {
+
+        factura.value.usuario = usr
+        console.log(factura.value.id)
+        await facturaStore.guardarFacturaTemporal(factura.value)
+        step.value++
+      }
+
 
     } catch (error) {
-      console.log('error al guardar factura')
+      console.log('Error', error)
     }
 
 } else if (step.value === 2) {
-    try {
-          //TODO  PREGUNTAR CHINO si es para mas de 1 producto
+
+    step.value++
+}
+else if (step.value === 3) {
+  await productoStore.obtenerProductoTemporales()
+  const productosCompletos = computed(() => {
+  return listaProductosTemp.value.map(producto => {
+    // Verifica si productoStore.productos está definido
+    if (!productoStore.productos) {
+      console.log('productoStore.productos no está definido');
+      return producto; // Devuelve el producto original si productos no está definido
+    }
+
+    const encontrado = productoStore.productos.find(p => p.nombre === producto.nombre);
+    return encontrado ? { ...producto, id: encontrado.id } : producto;
+  });
+});
+
+listaProductos.value = productosCompletos.value;
+  console.log(listaProductos.value, 'test lista')
+  step.value++
+}else if (step.value === 4) {
+
+
+
+  try {
+          //TODO  problema, tengo cambiar validacion id en producto porque si va a tener id pero del temporal no del original
         // Crear un array de promesas para todas las operaciones
-        const promises = listaProductos.value.map(async (producto) => {
+     const promises = listaProductos.value.map(async (producto) => {
             // Verificar que producto es un objeto y tiene o no tiene la propiedad id según sea necesario
             producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value)
             if (!producto || typeof producto !== 'object') {
@@ -715,6 +803,7 @@ if (step.value === 1) {
 
             if ('id' in producto) {
               const formData = new FormData();
+              formData.append('usuario', usr);
                 formData.append('nombre', producto.nombre);
                 formData.append('cantidad', producto.cantidad);
                 formData.append('descripcion', producto.descripcion);
@@ -731,6 +820,8 @@ if (step.value === 1) {
                 await productoStore.updateProducto(producto);
             } else {
               const formData = new FormData();
+                formData.append('id', nanoid(8));
+                formData.append('usuario', usr);
                 formData.append('nombre', nuevoNombre);
                 formData.append('cantidad', producto.cantidad);
                 formData.append('descripcion', producto.descripcion);
@@ -746,49 +837,41 @@ if (step.value === 1) {
                 console.log('Creando nuevo producto');
                 await productoStore.guardarProducto(producto);
 
-                //TODO puede que funcione, despues de step 2, ya guardo los productos, pero segun yo lista de productos aun tiene los productos, entonces hacer un nuevo get y comparar con los de lista y obtener los ids
-                //TODO agregar tablas temporales en la bd, luego en step 3 al 4 enviar a las originales y puedo obtener las tablas como el metodo de abajo
-                //TODO factura pendiente y mostrar como terminar
+
+            }
+            facturaFinal.value = {
+              id_factura: factura.id,
+              id_producto: producto.id,
+              precio_compra: producto.precio_compra,
+              precio_venta: producto.precio_venta,
             }
         });
-
+          //
         // Ejecutar todas las promesas en paralelo
         await Promise.all(promises);
-          console.log(listaProductos.value, 'listaProductos')
+        factura.value.id = nanoid(8)
+        await facturaStore.guardarFactura(factura.value)
+        await  facturaFinalStore.guardarFacturaFinal(facturaFinal.value)
         // Incrementar el step después de completar todas las operaciones
         step.value++;
     } catch (error) {
-        console.error('Error al procesar productos:', error);
+        console.error('Error al procesar los datos:', error);
         // Manejar el error apropiadamente
     }
-}
-else if (step.value === 3) {
-  await productoStore.obtenerProducto()
-  const productosCompletos = computed(() => {
-  return listaProductos.value.map(producto => {
-    const encontrado = productoStore.productos.find(p => p.nombre === producto.nombre);
-    return encontrado ? { ...producto, id: encontrado.id } : producto;
-  });
-});
-  console.log(productosCompletos.value, 'id')
-  step.value++
-}else if (step.value === 4) {
-  //TODO guardar productos y factura en el nuevo
-
-  step.value++
 }
 
  }
 
  // lista productos
  const listaProductos = ref([]);
-
-const agregarLista = () => {
+ const listaProductosTemp = ref([]);
+const agregarLista = async() => {
   // Verificar si existe producto.nombre para determinar si es nuevo o existente
   if (producto.value.nombre) {
     // Producto existente: Copia profunda del producto para evitar mutaciones accidentales
     const nuevoProducto = {
       ...producto.value.nombre,
+      usuario: usr,
       cantidad: producto.value.cantidad,
       descripcion: producto.value.descripcion,
       observacion: producto.value.observacion,
@@ -802,11 +885,12 @@ const agregarLista = () => {
     };
 
     // Agregar el producto a la lista de productos
-    listaProductos.value.push(nuevoProducto);
+    listaProductosTemp.value.push(nuevoProducto);
   } else {
     // Nuevo producto: Crear un objeto nuevoProducto
     const nuevoProducto = {
       nombre: nuevoNombre.value,
+      usuario: usr,
       cantidad: producto.value.cantidad,
       descripcion: producto.value.descripcion,
       observacion: producto.value.observacion,
@@ -820,7 +904,57 @@ const agregarLista = () => {
     };
 
     // Agregar el producto nuevo a la lista de productos
-    listaProductos.value.push(nuevoProducto);
+    listaProductosTemp.value.push(nuevoProducto);
+    //aqui iria el guardar
+     // Crear un array de promesas para todas las operaciones
+     const promises = listaProductosTemp.value.map(async (producto) => {
+            // Verificar que producto es un objeto y tiene o no tiene la propiedad id según sea necesario
+            producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value)
+            if (!producto || typeof producto !== 'object') {
+                throw new Error('Producto inválido');
+            }
+
+            if ('id' in producto) {
+              const formData = new FormData();
+              formData.append('usuario', usr);
+                formData.append('nombre', producto.nombre);
+                formData.append('cantidad', producto.cantidad);
+                formData.append('descripcion', producto.descripcion);
+                formData.append('observacion', producto.observacion);
+                formData.append('marca', producto.marca);
+                formData.append('precio_compra', producto.precio_compra);
+                formData.append('precio_venta', producto.precio_venta);
+                formData.append('codigo_qr', producto.codigo_qr);
+
+                if (producto.imagen) {
+                  formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
+                }
+
+                await productoStore.updateProductoTemporal(producto);
+            } else {
+              const formData = new FormData();
+              formData.append('usuario', usr);
+                formData.append('nombre', nuevoNombre);
+                formData.append('cantidad', producto.cantidad);
+                formData.append('descripcion', producto.descripcion);
+                formData.append('observacion', producto.observacion);
+                formData.append('marca', producto.marca);
+                formData.append('precio_compra', producto.precio_compra);
+                formData.append('precio_venta', producto.precio_venta);
+                formData.append('codigo_qr', producto.codigo_qr);
+
+                if (producto.imagen) {
+                  formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
+                }
+                console.log('Creando nuevo producto');
+                await productoStore.guardarProductoTemporal(producto);
+
+
+            }
+        });
+
+        // Ejecutar todas las promesas en paralelo
+        await Promise.all(promises);
   }
 
   // Limpiar el formulario o reiniciar valores después de agregarlo (opcional)
@@ -838,8 +972,9 @@ const reiniciarFormulario = () => {
     observacion: '',
     precio_compra: '',
     precio_venta: '',
-    imagen: '',
+    imagen: null,
   };
+  nuevaCantidad.value = ''
 };
  //fin lista
 

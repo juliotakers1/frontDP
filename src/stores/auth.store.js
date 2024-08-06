@@ -1,7 +1,6 @@
-import { defineStore } from 'pinia'
-import axios from 'axios'
-
-
+import { defineStore } from 'pinia';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // Asegúrate de importar así
 
 export const useAuthStore = defineStore({
   id: 'authStore',
@@ -28,18 +27,18 @@ export const useAuthStore = defineStore({
       try {
         const token = localStorage.getItem('token');
         if (token) {
-          // Verificar si el token es válido
-          const isTokenValid = token;
-          if (isTokenValid) {
-            // El token es válido, mantener la sesión activa
+          const decodedToken = jwtDecode(token);
+          console.log('Decoded Token:', decodedToken);
+
+          const currentTime = Date.now() / 1000;
+          if (decodedToken.exp > currentTime) {
             this.token = token;
+            this.user = decodedToken.data; // Asegúrate de que `data` sea el campo correcto
             this.isAuthenticated = true;
           } else {
-            // El token ha expirado, cerrar sesión
             this.logoutUser();
           }
         } else {
-          // No hay token en el almacenamiento local, cerrar sesión
           this.logoutUser();
         }
       } catch (error) {
@@ -47,8 +46,6 @@ export const useAuthStore = defineStore({
         throw error;
       }
     },
-    
-    
     logoutUser() {
       this.user = null;
       this.isAuthenticated = false;
