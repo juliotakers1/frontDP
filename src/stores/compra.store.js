@@ -8,6 +8,7 @@ export const useCompraStore = defineStore({
   state: () => ({
 
     producto: {
+        id: '',
         nombre: '',
         cantidad: '',
         descripcion: '',
@@ -39,7 +40,6 @@ export const useCompraStore = defineStore({
           params: { usuario }
         });
         this.productosTemporales = res.data.productosTemporales;
-        console.log('productosTemporales:', this.productosTemporales);
       } catch (error) {
         console.error('Error al cargar productos temporales:', error);
         throw error;
@@ -47,16 +47,14 @@ export const useCompraStore = defineStore({
     },
     async guardarProducto(payload) {
         try {
-          console.log(payload, 'payload')
           const formData = new FormData();
         for (const key in payload) {
           if (payload.hasOwnProperty(key)) {
             formData.append(key, payload[key]);
           }
         }
-        console.log(formData,'formData')
+
           const res = await axios.post('http://localhost:3000/producto/', formData);
-          console.log(formData, 'producto redi')
         } catch (error) {
           console.error('Error al enviar la producto:', error);
           throw error;
@@ -64,16 +62,16 @@ export const useCompraStore = defineStore({
       },
       async guardarProductoTemporal(payload) {
         try {
-          console.log(payload, 'payload')
+
           const formData = new FormData();
         for (const key in payload) {
           if (payload.hasOwnProperty(key)) {
             formData.append(key, payload[key]);
           }
         }
-        console.log(formData,'formData')
+
           const res = await axios.post('http://localhost:3000/productoTemporal/', formData);
-          console.log(formData, 'producto redi')
+
         } catch (error) {
           console.error('Error al enviar la producto:', error);
           throw error;
@@ -122,7 +120,6 @@ export const useCompraStore = defineStore({
           const response = await axios.get(`http://localhost:3000/producto?nombre=${nombre}`);
 
             this.productos = response.data;
-            console.log(this.productos, 'producs');
 
         } catch (error) {
           console.error('Error al buscar productos:', error);
@@ -135,13 +132,20 @@ export const useCompraStore = defineStore({
           const response = await axios.get(`http://localhost:3000/producto?codigo_qr=${barra}`);
           if (response.data) {
             this.productos = response.data;
-            console.log(this.productos, 'producs');
           } else {
             this.productos = [];
           }
         } catch (error) {
           console.error('Error al buscar productos:', error);
           this.productos = [];
+        }
+      },
+      async deleteProducto(id) {
+        try {
+          await axios.delete(`http://localhost:3000/productoTemporal/id/${id}`);
+        } catch (error) {
+          console.error('Error al borrar la factura:', error);
+          throw new Error('No se pudo borrar el producto. Inténtalo de nuevo más tarde.');
         }
       },
 

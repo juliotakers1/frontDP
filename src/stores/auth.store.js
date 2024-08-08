@@ -28,7 +28,6 @@ export const useAuthStore = defineStore({
         const token = localStorage.getItem('token');
         if (token) {
           const decodedToken = jwtDecode(token);
-          console.log('Decoded Token:', decodedToken);
 
           const currentTime = Date.now() / 1000;
           if (decodedToken.exp > currentTime) {

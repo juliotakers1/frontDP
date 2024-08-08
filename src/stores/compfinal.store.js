@@ -20,7 +20,6 @@ export const usefacturaFinalStore = defineStore({
       try {
         const res = await axios.get('http://localhost:3000/factura-compra/');
         this.facturas = res.data
-        console.log(this.facturas, 'facturas')
       } catch (error) {
         console.error('Error al cargar facturas:', error);
         throw error;
@@ -29,7 +28,6 @@ export const usefacturaFinalStore = defineStore({
     async guardarFacturaFinal(factura) {
         try {
           const res = await axios.post('http://localhost:3000/factura-compra/', factura);
-          console.log(factura, 'factura hecha')
         } catch (error) {
           console.error('Error al enviar la factura final:', error);
           throw error;

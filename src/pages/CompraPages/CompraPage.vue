@@ -395,7 +395,7 @@
         :name="3"
         title="Productos Cargados"
         icon="list"
-        v-if="listaProductosTemp.length > 0"
+        v-if="listaProductosTemp"
       >
         <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductosTemp" :title="'Productos Agregados'" />
       </q-step>
@@ -404,7 +404,13 @@
         title="Finalizar"
         icon="star"
       >
-        This step won't show up because it is disabled.
+      <q-banner class="bg-positive text-white q-mt-md text-bold" >
+        Se ha registrado correctamente.
+        <template v-slot:action>
+
+          <!-- <q-btn flat color="white" label="Cargar" @click="update" /> -->
+        </template>
+      </q-banner>
       </q-step>
 
 
@@ -412,7 +418,7 @@
       <template v-slot:navigation>
         <q-stepper-navigation>
           <q-btn @click="validarYGuardarData" color="primary" :label="step === 4 ? 'Finalizar' : 'Continuar'"  :disable="factura.no_documento ===''"  />
-          <q-btn v-if="step > 1" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
+          <q-btn v-if="step > 1 && step < 4" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
         </q-stepper-navigation>
       </template>
     </q-stepper>
@@ -462,6 +468,7 @@ const tab = ref('facturas')
     })
 
     const producto = ref({
+      id: '',
       nombre: '',
       cantidad: '',
       descripcion: '',
@@ -640,6 +647,20 @@ function limpiarCamposProducto() {
     codigo_qr: ''
   }
 }
+function limpiarCamposFactura() {
+  factura.value = {
+            no_documento: '',
+          tipo_documento: '',
+          fecha_emision: '',
+          fecha_pago: '',
+          razon_social_proveedor: '',
+          gastos_transporte: '',
+          telefono_vendedor: '',
+          nombre_vendedor: '',
+          tipo_pago: '',
+          tipo_factura: '',
+          }
+}
 //qr
 const filterFnCodigo = (val, update) => {
   if (val === '') {
@@ -703,11 +724,15 @@ const nuevoNombre = ref('')
 const nuevaCantidad = ref('') //TODO cambiar cantidad por nueva, y que al update se sume, si es nuevo solo que lo agruegue, y si es update que aparezca arriba del input stock
 //fn qr
 
-
+const deleteFacturaID = ref()
    onMounted(async() => {
      await productoStore.obtenerProducto()
      await productoStore.obtenerProductoTemporales(authStore.user.email)
      await facturaStore.obtenerFacturaTemporal(authStore.user.email)
+     if(facturaStore.facturasTemporales){
+      deleteFacturaID.value = facturaStore.facturasTemporales.map(factura => factura.id);
+     }
+
      if(productoStore.productosTemporales || facturaStore.facturasTemporales) {
       tab.value = 'nuevas'
       try {
@@ -729,7 +754,6 @@ const nuevaCantidad = ref('') //TODO cambiar cantidad por nueva, y que al update
 
 
           listaProductosTemp.value = productoStore.productosTemporales;
-          console.log(listaProductosTemp.value, 'listaaaaa')
         } catch (error) {
           console.error('Error al actualizar datos:', error);
         }
@@ -739,6 +763,7 @@ const nuevaCantidad = ref('') //TODO cambiar cantidad por nueva, y que al update
      }
 
    })
+
 
 
 // submit aqui
@@ -755,7 +780,6 @@ if (step.value === 1) {
       } else {
 
         factura.value.usuario = usr
-        console.log(factura.value.id)
         await facturaStore.guardarFacturaTemporal(factura.value)
         step.value++
       }
@@ -770,22 +794,29 @@ if (step.value === 1) {
     step.value++
 }
 else if (step.value === 3) {
-  await productoStore.obtenerProductoTemporales()
-  const productosCompletos = computed(() => {
+//   await productoStore.obtenerProductoTemporales()
+const productosCompletos = computed(() => {
   return listaProductosTemp.value.map(producto => {
     // Verifica si productoStore.productos está definido
     if (!productoStore.productos) {
-      console.log('productoStore.productos no está definido');
-      return producto; // Devuelve el producto original si productos no está definido
+      // Elimina la propiedad id si existe
+      const { id, ...productoSinId } = producto;
+      return productoSinId;
     }
 
     const encontrado = productoStore.productos.find(p => p.nombre === producto.nombre);
-    return encontrado ? { ...producto, id: encontrado.id } : producto;
+    const productoModificado = encontrado ? { ...producto, id: encontrado.id } : producto;
+
+    // Elimina la propiedad id si existe
+    const { id, ...productoSinId } = productoModificado;
+    return productoSinId;
   });
 });
 
 listaProductos.value = productosCompletos.value;
-  console.log(listaProductos.value, 'test lista')
+
+factura.value.id = nanoid(8)
+await facturaStore.guardarFactura(factura.value)
   step.value++
 }else if (step.value === 4) {
 
@@ -794,6 +825,7 @@ listaProductos.value = productosCompletos.value;
   try {
           //TODO  problema, tengo cambiar validacion id en producto porque si va a tener id pero del temporal no del original
         // Crear un array de promesas para todas las operaciones
+
      const promises = listaProductos.value.map(async (producto) => {
             // Verificar que producto es un objeto y tiene o no tiene la propiedad id según sea necesario
             producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value)
@@ -803,7 +835,6 @@ listaProductos.value = productosCompletos.value;
 
             if ('id' in producto) {
               const formData = new FormData();
-              formData.append('usuario', usr);
                 formData.append('nombre', producto.nombre);
                 formData.append('cantidad', producto.cantidad);
                 formData.append('descripcion', producto.descripcion);
@@ -819,10 +850,10 @@ listaProductos.value = productosCompletos.value;
 
                 await productoStore.updateProducto(producto);
             } else {
+              producto.id = nanoid(8)
               const formData = new FormData();
-                formData.append('id', nanoid(8));
-                formData.append('usuario', usr);
-                formData.append('nombre', nuevoNombre);
+                formData.append('id', producto.id);
+                formData.append('nombre', nuevoNombre ? nuevoNombre : producto.nombre);
                 formData.append('cantidad', producto.cantidad);
                 formData.append('descripcion', producto.descripcion);
                 formData.append('observacion', producto.observacion);
@@ -834,29 +865,41 @@ listaProductos.value = productosCompletos.value;
                 if (producto.imagen) {
                   formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
                 }
-                console.log('Creando nuevo producto');
+
                 await productoStore.guardarProducto(producto);
 
+                //f compra
+                facturaFinal.value = {
+                id_factura: factura.value.id,
+                id_producto: producto.id,
+                precio_compra: producto.precio_compra,
+                precio_venta: producto.precio_venta,
+            }
+
+            await  facturaFinalStore.guardarFacturaFinal(facturaFinal.value)
 
             }
-            facturaFinal.value = {
-              id_factura: factura.id,
-              id_producto: producto.id,
-              precio_compra: producto.precio_compra,
-              precio_venta: producto.precio_venta,
-            }
+
         });
           //
         // Ejecutar todas las promesas en paralelo
         await Promise.all(promises);
-        factura.value.id = nanoid(8)
-        await facturaStore.guardarFactura(factura.value)
-        await  facturaFinalStore.guardarFacturaFinal(facturaFinal.value)
+        const promises2 = listaProductosTemp.value.map(async (prd) => {
+
+          await productoStore.deleteProducto(prd.id)
+          await Promise.all(promises2);
+        });
+
+        await facturaStore.deleteFactura(deleteFacturaID.value[0])
+        limpiarCamposFactura()
+
         // Incrementar el step después de completar todas las operaciones
-        step.value++;
+
     } catch (error) {
         console.error('Error al procesar los datos:', error);
         // Manejar el error apropiadamente
+    } finally {
+      step.value = 1;
     }
 }
 
@@ -946,7 +989,7 @@ const agregarLista = async() => {
                 if (producto.imagen) {
                   formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
                 }
-                console.log('Creando nuevo producto');
+
                 await productoStore.guardarProductoTemporal(producto);
 
 
