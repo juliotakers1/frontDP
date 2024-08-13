@@ -10,7 +10,7 @@ export const useCompraStore = defineStore({
     producto: {
         id: '',
         nombre: '',
-        cantidad: '',
+        cantidad: 0,
         descripcion: '',
         observacion: '',
         marca: '',

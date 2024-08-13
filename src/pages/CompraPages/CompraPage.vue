@@ -498,7 +498,7 @@ const handleFileChange = (event) => {
 }
 
 
-  const generarCodigoBarra = () => {
+const generarCodigoBarra = () => {
   const generarRandomDigits = (length) => {
     let result = '';
     for (let i = 0; i < length; i++) {
@@ -543,7 +543,7 @@ const handleFileChange = (event) => {
   const margin = 10; // Margen entre imágenes
 
   // Añadir la imagen del código de barras según la cantidad
-  const cantidad = producto.value.cantidad;
+  const cantidad = nuevaCantidad.value;
   let x = 10; // Coordenada X inicial
   let y = 10; // Coordenada Y inicial
 
@@ -721,10 +721,9 @@ const filterFnCodigo = (val, update) => {
 }
 
 const nuevoNombre = ref('')
-const nuevaCantidad = ref('') //TODO cambiar cantidad por nueva, y que al update se sume, si es nuevo solo que lo agruegue, y si es update que aparezca arriba del input stock
-//fn qr
+const nuevaCantidad = ref('')
 
-const deleteFacturaID = ref()
+
    onMounted(async() => {
      await productoStore.obtenerProducto()
      await productoStore.obtenerProductoTemporales(authStore.user.email)

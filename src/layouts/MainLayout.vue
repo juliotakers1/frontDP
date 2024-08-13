@@ -1,5 +1,5 @@
 <template>
-  
+
 
 
   <div class="q-pa-md">
@@ -38,6 +38,15 @@
 
             <q-item-section>
               <router-link to="/compras" style="text-decoration: none; color: black;">Compras</router-link>
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-ripple :active="link === 'compras-directas'" @click="link = 'compras-directas'" active-class="my-menu-link">
+            <q-item-section avatar>
+              <q-icon name="storefront" />
+            </q-item-section>
+
+            <q-item-section>
+              <router-link to="/compras-directas" style="text-decoration: none; color: black;">Compras Directas</router-link>
             </q-item-section>
           </q-item>
 

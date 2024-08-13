@@ -17,13 +17,18 @@ const routes = [
       meta: { requiredAuthorization: true,
         roles: ['ADMIN','USER']
       },
-      
+
        },
        { path: '/compras', component: () => import('pages/CompraPages/CompraPage.vue'),
        meta: { requiredAuthorization: true,
         roles: ['ADMIN','USER']
       },
         },
+        { path: '/compras-directas', component: () => import('pages/ComprasDirectasPage/ComprasDirectasView.vue'),
+          meta: { requiredAuthorization: true,
+           roles: ['ADMIN','USER']
+         },
+           },
     ]
   },
 
