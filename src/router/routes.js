@@ -28,7 +28,17 @@ const routes = [
           meta: { requiredAuthorization: true,
            roles: ['ADMIN','USER']
          },
-           },
+      },
+      { path: '/facturas', component: () => import('pages/FacturasPage/FacturasView.vue'),
+        meta: { requiredAuthorization: true,
+         roles: ['ADMIN','USER']
+       },
+    },
+    { path: '/productos', component: () => import('pages/ProductosPage/ProductosView.vue'),
+      meta: { requiredAuthorization: true,
+       roles: ['ADMIN','USER']
+     },
+  },
     ]
   },
 

@@ -42,7 +42,7 @@
           </q-item>
           <q-item clickable v-ripple :active="link === 'compras-directas'" @click="link = 'compras-directas'" active-class="my-menu-link">
             <q-item-section avatar>
-              <q-icon name="storefront" />
+              <q-icon name="shopping_bag" />
             </q-item-section>
 
             <q-item-section>
@@ -50,23 +50,23 @@
             </q-item-section>
           </q-item>
 
-          <q-item  clickable v-ripple>
+          <q-item clickable v-ripple :active="link === 'facturas'" @click="link = 'facturas'" active-class="my-menu-link">
             <q-item-section avatar>
-              <q-icon name="sell" />
+              <q-icon name="task" />
             </q-item-section>
 
             <q-item-section>
-              Ventas
+              <router-link to="/facturas" style="text-decoration: none; color: black;">Facturas</router-link>
             </q-item-section>
           </q-item>
 
-          <q-item clickable v-ripple>
+          <q-item clickable v-ripple :active="link === 'productos'" @click="link = 'productos'" active-class="my-menu-link">
             <q-item-section avatar>
-              <q-icon name="send" />
+              <q-icon name="menu_book" />
             </q-item-section>
 
             <q-item-section>
-              Send
+              <router-link to="/productos" style="text-decoration: none; color: black;">Productos</router-link>
             </q-item-section>
           </q-item>
 

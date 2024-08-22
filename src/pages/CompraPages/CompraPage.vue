@@ -2,18 +2,7 @@
      <div class="">
     <div class="q-gutter-y-md" >
       <q-card>
-        <q-tabs
-          v-model="tab"
-          dense
-          class="bg-grey-2 text-grey-7"
-          active-color="primary"
-          indicator-color="red"
-          align="justify"
-        >
-          <q-tab name="facturas" label="Factura" no-caps />
-          <q-tab name="productos" label="Producto" no-caps />
-          <q-tab name="nuevas" label="Nueva" no-caps />
-        </q-tabs>
+
 
 
 
@@ -30,403 +19,388 @@
 
 
 
-        <q-tab-panels v-model="tab" animated class="bg-grey-1 text-dark ">
-          <q-tab-panel name="facturas">
+        <div class=" ">
 
-            tabla
-          </q-tab-panel>
+          <q-stepper
+            v-model="step"
+            ref="stepper"
+            color="primary"
+            animated
+            flat
+            class="bg-grey-1"
+          >
+            <q-step
+              :name="1"
+              title="Nueva Factura"
+              icon="settings"
+              :done="step > 1"
+            >
+          <div>
 
-          <q-tab-panel name="productos" class="bg-grey-1 text-white">
-            <TablaGeneral :columns-prop="colProductos" :rows-prop="productoStore.productos" :title="'Productos'" />
-          </q-tab-panel>
+          <div class="row q-col-gutter-sm">
+            <q-input
+            class="col-md-3 col-sm-12 q-mb-md"
+              outlined
+              dense
+              v-model="factura.no_documento"
+              label="No. Documento *"
 
-            <q-tab-panel name="nuevas" class="bg-grey-1 text-dark">
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese su No. Documento']"
+            />
+            <q-input
+            class="col-md-3 col-sm-12 q-mb-md"
+              outlined
+              dense
+              v-model="factura.tipo_documento"
+              label="Tipo de Documento *"
 
-            <div class=" ">
-
-              <q-stepper
-                v-model="step"
-                ref="stepper"
-                color="primary"
-                animated
-                flat
-                class="bg-grey-1"
-              >
-                <q-step
-                  :name="1"
-                  title="Nueva Factura"
-                  icon="settings"
-                  :done="step > 1"
-                >
-              <div>
-
-              <div class="row q-col-gutter-sm">
-                <q-input
-                class="col-md-3 col-sm-12 q-mb-md"
-                  outlined
-                  dense
-                  v-model="factura.no_documento"
-                  label="No. Documento *"
-
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese su No. Documento']"
-                />
-                <q-input
-                class="col-md-3 col-sm-12 q-mb-md"
-                  outlined
-                  dense
-                  v-model="factura.tipo_documento"
-                  label="Tipo de Documento *"
-
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese el Tipo de Documento']"
-                />
-
-                    <q-input
-                    class="col-3 q-mb-md"
-                  outlined
-                  dense
-                  type="date"
-                  v-model="factura.fecha_emision"
-                  label="Fecha de Emision *"
-
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese la Fecha de Emision']"
-                />
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese el Tipo de Documento']"
+            />
 
                 <q-input
                 class="col-3 q-mb-md"
-                  outlined
-                  dense
-                  type="date"
-                  v-model="factura.fecha_pago"
-                  label="Fecha de Pago *"
+              outlined
+              dense
+              type="date"
+              v-model="factura.fecha_emision"
+              label="Fecha de Emision *"
 
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese la Fecha de Pago']"
-                />
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese la Fecha de Emision']"
+            />
 
-                <q-input
-                class="col-3 q-mb-md"
-                  outlined
-                  dense
-                  v-model="factura.razon_social_proveedor"
-                  label="Razon Social/Proveedor *"
+            <q-input
+            class="col-3 q-mb-md"
+              outlined
+              dense
+              type="date"
+              v-model="factura.fecha_pago"
+              label="Fecha de Pago *"
 
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese Razon Social/Proveedor']"
-                />
-                <q-input
-                class="col-3 q-mb-md"
-                  outlined
-                  dense
-                  v-model="factura.gastos_transporte"
-                  label="Gastos de Transporte *"
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese la Fecha de Pago']"
+            />
 
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese el Gastos de Transporte']"
-                />
+            <q-input
+            class="col-3 q-mb-md"
+              outlined
+              dense
+              v-model="factura.razon_social_proveedor"
+              label="Razon Social/Proveedor *"
 
-                  <q-input
-                  class="col-3 q-mb-md"
-                  outlined
-                  dense
-                  type="number"
-                  v-model="factura.telefono_vendedor"
-                  label="Telefono Vendedor *"
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese Razon Social/Proveedor']"
+            />
+            <q-input
+            class="col-3 q-mb-md"
+              outlined
+              dense
+              v-model="factura.gastos_transporte"
+              label="Gastos de Transporte *"
 
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese el Telefono de Vendedor']"
-                />
-                <q-input
-                class="col-3 q-mb-md"
-                  outlined
-                  dense
-                  v-model="factura.nombre_vendedor"
-                  label="Nombre Vendedor *"
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese el Gastos de Transporte']"
+            />
 
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese el Nombre Vendedor']"
-                />
+              <q-input
+              class="col-3 q-mb-md"
+              outlined
+              dense
+              type="number"
+              v-model="factura.telefono_vendedor"
+              label="Telefono Vendedor *"
 
-                <q-input
-                class="col-3 q-mb-md"
-                  outlined
-                  dense
-                  v-model="factura.tipo_pago"
-                  label="Tipo de Pago *"
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese el Telefono de Vendedor']"
+            />
+            <q-input
+            class="col-3 q-mb-md"
+              outlined
+              dense
+              v-model="factura.nombre_vendedor"
+              label="Nombre Vendedor *"
 
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese el Tipo de Pago']"
-                />
-                <q-input
-                class="col-3 q-mb-md"
-                  outlined
-                  dense
-                  v-model="factura.tipo_factura"
-                  label="Tipo de Factura *"
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese el Nombre Vendedor']"
+            />
 
-                  lazy-rules
-                  :rules="[ val => val && val.length > 0 || 'Ingrese el Tipo de Factura']"
-                />
-               </div>
+            <q-input
+            class="col-3 q-mb-md"
+              outlined
+              dense
+              v-model="factura.tipo_pago"
+              label="Tipo de Pago *"
+
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese el Tipo de Pago']"
+            />
+            <q-input
+            class="col-3 q-mb-md"
+              outlined
+              dense
+              v-model="factura.tipo_factura"
+              label="Tipo de Factura *"
+
+              lazy-rules
+              :rules="[ val => val && val.length > 0 || 'Ingrese el Tipo de Factura']"
+            />
+           </div>
 
 
 
-     </div>
-       </q-step>
+ </div>
+   </q-step>
 
-      <q-step
-        :name="2"
-        title="Productos"
-        icon="store"
-        :done="step > 2"
-      >
-      <div >
+  <q-step
+    :name="2"
+    title="Productos"
+    icon="store"
+    :done="step > 2"
+  >
+  <div >
 
-      <div class="row q-col-gutter-sm">
+  <div class="row q-col-gutter-sm">
 
-        <div class="col-md-12 col-sm-12 q-mb-md" id="select">
-          <q-toggle
-        v-model="third"
-        checked-icon="check"
-        color="green"
-        unchecked-icon="clear"
-        label="Buscar Producto Nombre"
-      />
+    <div class="col-md-12 col-sm-12 q-mb-md" id="select">
       <q-toggle
-        v-model="barras"
-        checked-icon="check"
-        color="green"
-        unchecked-icon="clear"
-        label="Buscar Producto Codigo Barras"
+    v-model="third"
+    checked-icon="check"
+    color="green"
+    unchecked-icon="clear"
+    label="Buscar Producto Nombre"
+  />
+  <q-toggle
+    v-model="barras"
+    checked-icon="check"
+    color="green"
+    unchecked-icon="clear"
+    label="Buscar Producto Codigo Barras"
+  />
+  <q-toggle
+    v-model="nuevo"
+    checked-icon="check"
+    color="green"
+    unchecked-icon="clear"
+    label="Crear Producto"
+  />
+
+    <q-select
+      outlined
+      dense
+      v-model="producto.nombre"
+      use-input
+      input-debounce="0"
+      label="Buscar Productos"
+      :options="productoStore.productos"
+      option-label="nombre"
+      option-value="id"
+      @filter="filterFn"
+      v-if="third && !barras && !nuevo"
+
+    >
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey">
+          No results
+        </q-item-section>
+      </q-item>
+    </template>
+    <!-- Slot para el icono clearable -->
+    <template v-slot:append>
+      <q-icon
+        v-if="producto.nombre"
+        name="cancel"
+        class="cursor-pointer"
+        @click.stop.prevent="producto.nombre = null"
       />
-      <q-toggle
-        v-model="nuevo"
-        checked-icon="check"
-        color="green"
-        unchecked-icon="clear"
-        label="Crear Producto"
+    </template>
+  </q-select>
+  <!-- 2 -->
+
+    <q-select
+      outlined
+      dense
+      v-model="producto.codigo_qr"
+      use-input
+      input-debounce="0"
+      label="Buscar Productos"
+      :options="productoStore.productos"
+      option-label="codigo_qr"
+      option-value="id"
+      @filter="filterFnCodigo"
+
+      v-else-if="barras && !third && !nuevo"
+    >
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey">
+          No results
+        </q-item-section>
+      </q-item>
+    </template>
+    <!-- Slot para el icono clearable -->
+    <template v-slot:append>
+      <q-icon
+        v-if="producto.codigo_qr"
+        name="cancel"
+        class="cursor-pointer"
+       @click.stop.prevent="producto.codigo_qr = null"
       />
+    </template>
+  </q-select>
+  <!-- 3 -->
 
-        <q-select
-          outlined
-          dense
-          v-model="producto.nombre"
-          use-input
-          input-debounce="0"
-          label="Buscar Productos"
-          :options="productoStore.productos"
-          option-label="nombre"
-          option-value="id"
-          @filter="filterFn"
-          v-if="third && !barras && !nuevo"
+  <q-input
 
-        >
-        <template v-slot:no-option>
-          <q-item>
-            <q-item-section class="text-grey">
-              No results
-            </q-item-section>
-          </q-item>
-        </template>
-        <!-- Slot para el icono clearable -->
-        <template v-slot:append>
-          <q-icon
-            v-if="producto.nombre"
-            name="cancel"
-            class="cursor-pointer"
-            @click.stop.prevent="producto.nombre = null"
-          />
-        </template>
-      </q-select>
-      <!-- 2 -->
+      v-else-if="nuevo && !barras && !third"
+      class=" col-12 q-mb-md"
+      type="text"
+      outlined
+      dense
+      v-model="nuevoNombre"
+      label="Nombre Producto *"
+      lazy-rules
+      :rules="[ val => val && val.length > 0 || 'Ingrese nombre del Producto']"
+    />
+    </div>
 
-        <q-select
-          outlined
-          dense
-          v-model="producto.codigo_qr"
-          use-input
-          input-debounce="0"
-          label="Buscar Productos"
-          :options="productoStore.productos"
-          option-label="codigo_qr"
-          option-value="id"
-          @filter="filterFnCodigo"
+    <div class="col-12">
 
-          v-else-if="barras && !third && !nuevo"
-        >
-        <template v-slot:no-option>
-          <q-item>
-            <q-item-section class="text-grey">
-              No results
-            </q-item-section>
-          </q-item>
-        </template>
-        <!-- Slot para el icono clearable -->
-        <template v-slot:append>
-          <q-icon
-            v-if="producto.codigo_qr"
-            name="cancel"
-            class="cursor-pointer"
-           @click.stop.prevent="producto.codigo_qr = null"
-          />
-        </template>
-      </q-select>
-      <!-- 3 -->
+      <p v-if="producto.cantidad" class="column text-existencia" >Existencia: {{producto.cantidad}}</p>
+      <p v-if="nuevaCantidad" class="column existencia" >Existencia Total:  {{ Number(producto.cantidad) + Number(nuevaCantidad) }}</p>
+    <!-- Otros campos aquí -->
 
+    </div>
+    <q-input
+      class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
+      type="text"
+      outlined
+      dense
+      v-model="nuevaCantidad"
+      label="Cantidad *"
+      lazy-rules
+      :rules="[ val => val && val.length > 0 || 'Ingrese la Cantidad']"
+    />
+     <q-input
+      class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
+      outlined
+      dense
+      v-model="producto.marca"
+      label="Marca *"
+      lazy-rules
+      :rules="[ val => val && val.length > 0 || 'Ingrese Marca']"
+    />
+    <q-input
+      class="col-12 q-mb-md"
+      outlined
+      dense
+      type="text"
+      v-model="producto.descripcion"
+      label="Descripcion *"
+      lazy-rules
+      :rules="[ val => val && val.length > 0 || 'Ingrese la Descripcion']"
+    />
+    <q-input
+      class="col-12 q-mb-md"
+      outlined
+      dense
+      type="text"
+      v-model="producto.observacion"
+      label="Observacion *"
+      lazy-rules
+      :rules="[ val => val && val.length > 0 || 'Ingrese la Observacion']"
+    />
+    <q-input
+      class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
+      outlined
+      dense
+      v-model="producto.precio_compra"
+      label="Precio de Compra *"
+      lazy-rules
+      :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Compra']"
+    />
+    <q-input
+      class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
+      outlined
+      dense
+      v-model="producto.precio_venta"
+      label="Precio de Venta *"
+      lazy-rules
+      :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Venta']"
+    />
+
+    <div class="col-md-4 col-sm-12 col-xs-12 q-gutter-sm q-mb-md">
       <q-input
-
-          v-else-if="nuevo && !barras && !third"
-          class=" col-12 q-mb-md"
-          type="text"
-          outlined
-          dense
-          v-model="nuevoNombre"
-          label="Nombre Producto *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese nombre del Producto']"
-        />
-        </div>
-
-        <div class="col-12">
-
-          <p v-if="producto.cantidad" class="column text-existencia" >Existencia: {{producto.cantidad}}</p>
-          <p v-if="nuevaCantidad" class="column existencia" >Existencia Total:  {{ Number(producto.cantidad) + Number(nuevaCantidad) }}</p>
-        <!-- Otros campos aquí -->
-
-        </div>
-        <q-input
-          class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
-          type="text"
-          outlined
-          dense
-          v-model="nuevaCantidad"
-          label="Cantidad *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese la Cantidad']"
-        />
-         <q-input
-          class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
-          outlined
-          dense
-          v-model="producto.marca"
-          label="Marca *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese Marca']"
-        />
-        <q-input
-          class="col-12 q-mb-md"
-          outlined
-          dense
-          type="text"
-          v-model="producto.descripcion"
-          label="Descripcion *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese la Descripcion']"
-        />
-        <q-input
-          class="col-12 q-mb-md"
-          outlined
-          dense
-          type="text"
-          v-model="producto.observacion"
-          label="Observacion *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese la Observacion']"
-        />
-        <q-input
-          class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
-          outlined
-          dense
-          v-model="producto.precio_compra"
-          label="Precio de Compra *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Compra']"
-        />
-        <q-input
-          class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
-          outlined
-          dense
-          v-model="producto.precio_venta"
-          label="Precio de Venta *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Venta']"
-        />
-
-        <div class="col-md-4 col-sm-12 col-xs-12 q-gutter-sm q-mb-md">
-          <q-input
-          class="col-8"
-          outlined
-          dense
-          v-model="producto.codigo_qr"
-          label="Codigo de barras *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese el Codigo de barras']"
-        />
-          <q-btn
-          class="col-2 float-right"
-          label="Generar Codigo"
-          color="purple"
-          @click="generarCodigoBarra"
-        />
+      class="col-8"
+      outlined
+      dense
+      v-model="producto.codigo_qr"
+      label="Codigo de barras *"
+      lazy-rules
+      :rules="[ val => val && val.length > 0 || 'Ingrese el Codigo de barras']"
+    />
+      <q-btn
+      class="col-2 float-right"
+      label="Generar Codigo"
+      color="purple"
+      @click="generarCodigoBarra"
+    />
 
 
-        </div>
+    </div>
 
-        <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
+    <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
 
-          <input type="file" @change="handleFileChange"  class="col-md-4 col-sm-12 q-mb-md" />
-            <p></p>
-            <img :src="imagePreview" alt="" v-if="imagePreview" width="100px" height="100px">
-        </div>
+      <input type="file" @change="handleFileChange"  class="col-md-4 col-sm-12 q-mb-md" />
+        <p></p>
+        <img :src="imagePreview" alt="" v-if="imagePreview" width="100px" height="100px">
+    </div>
 
-        <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
-            <q-btn @click="agregarLista" color="blue-grey" label="Agregar"  class="col-4  q-mb-md float-right	"   />
-          </div>
+    <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
+        <q-btn @click="agregarLista" color="blue-grey" label="Agregar"  class="col-4  q-mb-md float-right	"   />
+      </div>
 
-       </div>
+   </div>
 
 
 
 </div>
-      </q-step>
-      <q-step
-        :name="3"
-        title="Productos Cargados"
-        icon="list"
-        v-if="listaProductosTemp"
-      >
-        <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductosTemp" :title="'Productos Agregados'" />
-      </q-step>
-      <q-step
-        :name="4"
-        title="Finalizar"
-        icon="star"
-      >
-      <q-banner class="bg-positive text-white q-mt-md text-bold" >
-        Se ha registrado correctamente.
-        <template v-slot:action>
+  </q-step>
+  <q-step
+    :name="3"
+    title="Productos Cargados"
+    icon="list"
+    v-if="listaProductosTemp"
+  >
+    <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductosTemp" :title="'Productos Agregados'" />
+  </q-step>
+  <q-step
+    :name="4"
+    title="Finalizar"
+    icon="star"
+  >
+  <q-banner class="bg-positive text-white q-mt-md text-bold" >
+    Se ha registrado correctamente.
+    <template v-slot:action>
 
-          <!-- <q-btn flat color="white" label="Cargar" @click="update" /> -->
-        </template>
-      </q-banner>
-      </q-step>
+      <!-- <q-btn flat color="white" label="Cargar" @click="update" /> -->
+    </template>
+  </q-banner>
+  </q-step>
 
 
 
-      <template v-slot:navigation>
-        <q-stepper-navigation>
-          <q-btn @click="validarYGuardarData" color="primary" :label="step === 4 ? 'Finalizar' : 'Continuar'"  :disable="factura.no_documento ===''"  />
-          <q-btn v-if="step > 1 && step < 4" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
-        </q-stepper-navigation>
-      </template>
-    </q-stepper>
+  <template v-slot:navigation>
+    <q-stepper-navigation>
+      <q-btn @click="validarYGuardarData" color="primary" :label="step === 4 ? 'Finalizar' : 'Continuar'"  :disable="factura.no_documento ===''"  />
+      <q-btn v-if="step > 1 && step < 4" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
+    </q-stepper-navigation>
+  </template>
+</q-stepper>
 
-            </div>
-
-          </q-tab-panel>
-        </q-tab-panels>
+        </div>
       </q-card>
     </div>
   </div>
@@ -722,18 +696,18 @@ const filterFnCodigo = (val, update) => {
 
 const nuevoNombre = ref('')
 const nuevaCantidad = ref('')
-
+const deleteFacturaID = ref()
 
    onMounted(async() => {
      await productoStore.obtenerProducto()
      await productoStore.obtenerProductoTemporales(authStore.user.email)
      await facturaStore.obtenerFacturaTemporal(authStore.user.email)
-     if(facturaStore.facturasTemporales){
+     console.log(facturaStore.facturasTemporales)
+     if(facturaStore.facturasTemporales){ //ver porque no carga
       deleteFacturaID.value = facturaStore.facturasTemporales.map(factura => factura.id);
      }
 
      if(productoStore.productosTemporales || facturaStore.facturasTemporales) {
-      tab.value = 'nuevas'
       try {
           // Cargar facturas temporales
           const facturaTemporal = facturaStore.facturasTemporales[0]; // O elige el índice adecuado
@@ -758,7 +732,6 @@ const nuevaCantidad = ref('')
         }
      } else {
 
-      tab.value = 'facturas'
      }
 
    })

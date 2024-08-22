@@ -36,13 +36,7 @@
         unchecked-icon="clear"
         label="Buscar Producto Codigo Barras"
       />
-      <q-toggle
-        v-model="nuevo"
-        checked-icon="check"
-        color="green"
-        unchecked-icon="clear"
-        label="Crear Producto"
-      />
+
 
         <q-select
           outlined
@@ -110,18 +104,7 @@
       </q-select>
       <!-- 3 -->
 
-      <q-input
 
-          v-else-if="nuevo && !barras && !third"
-          class=" col-12 q-mb-md"
-          type="text"
-          outlined
-          dense
-          v-model="nuevoNombre"
-          label="Nombre Producto *"
-          lazy-rules
-          :rules="[ val => val && val.length > 0 || 'Ingrese nombre del Producto']"
-        />
         </div>
 
         <div class="col-12">
@@ -150,6 +133,7 @@
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese Marca']"
         />
+        <!-- <q-select outlined dense v-model="producto.categoria" :options="cats" label="Categoria" class="col-md-4 col-sm-12 col-xs-12 q-mb-md" /> -->
         <q-input
           class="col-12 q-mb-md"
           outlined
@@ -220,7 +204,7 @@
             <q-btn @click="agregarLista" color="blue-grey" label="Agregar"  class="col-4  q-mb-md float-right	"   />
           </div>
           <div class="col-12">
-            <TablaGeneral :columns-prop="colProductos" :rows-prop="listaProductosTemp" :title="'Productos'" />
+            <TableFunctions :columns-prop="colProductos" :rows-prop="listaProductosTemp" :title="'Productos'" />
           </div>
        </div>
       </q-step>
@@ -231,7 +215,113 @@
       icon="store"
       :done="step > 2"
       >
-      Producto Armado
+      <div class="row q-col-gutter-sm">
+
+        <div class="col-md-12 col-sm-12 q-mb-md" id="select">
+
+
+      <q-input
+
+          class=" col-12 q-mb-md"
+          type="text"
+          outlined
+          dense
+          v-model="venta.nombre"
+          label="Nombre Producto *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese nombre del Producto']"
+        />
+        </div>
+
+        <q-input
+          class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
+          type="number"
+          outlined
+          dense
+          v-model="venta.cantidad"
+          label="Cantidad *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese la Cantidad']"
+        />
+         <q-input
+          class="col-md-6 col-sm-12 col-xs-12 q-mb-md"
+          outlined
+          dense
+          v-model="venta.marca"
+          label="Marca *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese Marca']"
+        />
+        <q-select outlined dense v-model="venta.categoria" :options="cats" label="Categoria" class="col-md-4 col-sm-12 col-xs-12 q-mb-md" />
+        <q-input
+          class="col-12 q-mb-md"
+          outlined
+          dense
+          type="text"
+          v-model="venta.descripcion"
+          label="Descripcion *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese la Descripcion']"
+        />
+        <q-input
+          class="col-12 q-mb-md"
+          outlined
+          dense
+          type="text"
+          v-model="venta.observacion"
+          label="Observacion *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese la Observacion']"
+        />
+        <q-input
+          class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
+          outlined
+          dense
+          v-model="totalVentas"
+          label="Precio de Compra *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Compra']"
+        />
+        <q-input
+          class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
+          outlined
+          dense
+          v-model="venta.precio_venta"
+          label="Precio de Venta *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Venta']"
+        />
+
+        <div class="col-md-4 col-sm-12 col-xs-12 q-gutter-sm q-mb-md">
+          <q-input
+          class="col-8"
+          outlined
+          dense
+          v-model="venta.codigo_qr"
+          label="Codigo de barras *"
+          lazy-rules
+          :rules="[ val => val && val.length > 0 || 'Ingrese el Codigo de barras']"
+        />
+          <q-btn
+          class="col-2 float-right"
+          label="Generar Codigo"
+          color="purple"
+          @click="generarCodigoBarra2"
+        />
+
+
+        </div>
+
+        <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
+
+          <input type="file" @change="handleFileChange2"  class="col-md-4 col-sm-12 q-mb-md" />
+            <p></p>
+            <img :src="imagePreview2" alt="" v-if="imagePreview2" width="100px" height="100px">
+        </div>
+
+        <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
+          </div>
+       </div>
       </q-step>
 
       <q-step
@@ -252,8 +342,8 @@
 
 <template v-slot:navigation>
 <q-stepper-navigation>
-<q-btn @click="validarYGuardarData" color="primary" :label="step === 4 ? 'Finalizar' : 'Continuar'"    />
-<q-btn v-if="step > 1 && step < 4" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
+<q-btn @click="validarYGuardarData" color="primary" :label="step === 3 ? 'Finalizar' : 'Continuar'"    />
+<q-btn v-if="step > 1 && step < 3" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
 </q-stepper-navigation>
 </template>
 </q-stepper>
@@ -278,6 +368,7 @@ import { useAuthStore } from 'src/stores/auth.store';
 import { usefacturaFinalStore } from "src/stores/compfinal.store";
 import { useQuasar } from "quasar";
 import  TablaGeneral  from "src/components/Table/TablaGeneral.vue"
+import TableFunctions from "src/components/Table/TableFunctions.vue";
 import JsBarcode from 'jsbarcode';
 import { nanoid } from 'nanoid';
 import jsPDF from 'jspdf';
@@ -288,7 +379,9 @@ const step= ref(1)
  const authStore = useAuthStore()
  const usr = authStore.user.email
 
-
+ const cats = ref([
+        'Servicio', 'Producto'
+      ])
  const producto = ref({
    id: '',
    nombre: '',
@@ -299,7 +392,20 @@ const step= ref(1)
    precio_compra: '',
    precio_venta: '',
    imagen: null,
-   codigo_qr: ''
+   codigo_qr: '',
+ })
+ const venta = ref({
+   id: '',
+   nombre: '',
+   cantidad: 0,
+   descripcion: '',
+   observacion: '',
+   marca: '',
+   precio_compra: '',
+   precio_venta: '',
+   imagen: null,
+   codigo_qr: '',
+   categoria: ''
  })
  const facturaFinal = ref({
    id_factura: '',
@@ -452,8 +558,7 @@ update(() => {
 }
 
 const nuevoNombre = ref('')
-const nuevaCantidad = ref(0) //TODO cambiar cantidad por nueva, y que al update se sume, si es nuevo solo que lo agruegue, y si es update que aparezca arriba del input stock
-//fn qr
+const nuevaCantidad = ref(0)
 
 
 onMounted(async() => {
@@ -532,8 +637,78 @@ const generarCodigoBarra = () => {
   const pdfFileName = 'producto.pdf';
   doc.save(pdfFileName);
 };
-const imagePreview = ref(null)
+const generarCodigoBarra2 = () => {
+  const generarRandomDigits = (length) => {
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += Math.floor(Math.random() * 10);
+    }
+    return result;
+  };
 
+  const calcularChecksum = (codigo) => {
+    let suma = 0;
+    for (let i = 0; i < codigo.length; i++) {
+      suma += parseInt(codigo[i]) * (i % 2 === 0 ? 1 : 3);
+    }
+    const mod = suma % 10;
+    return mod === 0 ? 0 : 10 - mod;
+  };
+
+  const codigoBase = generarRandomDigits(12);
+  const checksum = calcularChecksum(codigoBase);
+  const codigoQR = codigoBase + checksum;
+
+  venta.value.codigo_qr = codigoQR;
+
+  // Crear un canvas para el código de barras
+  const canvas = document.createElement('canvas');
+  canvas.width = 200; // Ancho del canvas ajustado para una buena resolución
+  canvas.height = 80; // Altura del canvas ajustado para una buena resolución
+  JsBarcode(canvas, codigoQR, {
+    format: 'CODE128',
+    displayValue: true,
+    textMargin: 4, // Margen entre el código de barras y el texto
+    fontSize: 16, // Tamaño de fuente para los números
+    fontOptions: 'bold'
+  });
+
+  const imgData = canvas.toDataURL('image/png');
+
+  // Crear un nuevo PDF
+  const doc = new jsPDF();
+  const width = 60; // Ancho de la imagen en el PDF
+  const height = 30; // Altura de la imagen en el PDF
+  const margin = 10; // Margen entre imágenes
+
+  // Añadir la imagen del código de barras según la cantidad
+  const cantidad = venta.value.cantidad;
+  let x = 10; // Coordenada X inicial
+  let y = 10; // Coordenada Y inicial
+
+  for (let i = 0; i < cantidad; i++) {
+    doc.addImage(imgData, 'PNG', x, y, width, height);
+
+    // Actualizar las coordenadas X e Y para la próxima imagen
+    x += width + margin;
+    if (x + width > doc.internal.pageSize.getWidth()) { // Si la siguiente imagen excede el ancho de la página
+      x = 10; // Reiniciar X
+      y += height + margin; // Mover Y hacia abajo
+    }
+
+    if (y + height > doc.internal.pageSize.getHeight()) { // Si la siguiente imagen excede el alto de la página
+      doc.addPage(); // Añadir una nueva página
+      x = 10; // Reiniciar X
+      y = 10; // Reiniciar Y
+    }
+  }
+
+  // Guardar el PDF con el nombre especificado en producto.value.nombre
+  const pdfFileName = 'producto.pdf';
+  doc.save(pdfFileName);
+};
+const imagePreview = ref(null)
+const imagePreview2 = ref(null)
 const handleFileChange = (event) => {
   const file = event.target.files[0]
   producto.value.imagen = file // Almacena el archivo seleccionado
@@ -543,18 +718,26 @@ const handleFileChange = (event) => {
     imagePreview.value = null
   }
 }
-
+const handleFileChange2 = (event) => {
+  const file = event.target.files[0]
+  venta.value.imagen = file // Almacena el archivo seleccionado
+  if (file && file.type.startsWith('image/')) {
+    imagePreview2.value = URL.createObjectURL(file)
+  } else {
+    imagePreview2.value = null
+  }
+}
 
 // lista productos
 const listaProductos = ref([]);
 const listaProductosTemp = ref([]);
 const agregarLista = async() => {
     if (producto.value.nombre) {
-        // Producto existente
-        //TODO VER PORQUE ME CAMBIA LA NUEVA CANT AHORA
+
             const nuevoProducto = {
             ...producto.value.nombre,
             cantidad: nuevaCantidad.value,
+            cantidadFalta: producto.value.cantidad,
             descripcion: producto.value.descripcion,
             observacion: producto.value.observacion,
             marca: producto.value.marca,
@@ -567,8 +750,8 @@ const agregarLista = async() => {
         };
 
         listaProductos.value.push(nuevoProducto);
-        listaProductosTemp.value.push(nuevoProducto);
-        console.log(listaProductosTemp.value, 'temsps')
+        listaProductosTemp.value.push(JSON.parse(JSON.stringify(nuevoProducto)));
+        // console.log(listaProductos.value, 'temsps1')
         limpiarCamposProducto();
 
     } else {
@@ -576,6 +759,7 @@ const agregarLista = async() => {
         const nuevoProducto = {
             nombre: nuevoNombre.value,
             cantidad: nuevaCantidad.value,
+            cantidadFalta: producto.value.cantidad,
             descripcion: producto.value.descripcion,
             observacion: producto.value.observacion,
             marca: producto.value.marca,
@@ -588,65 +772,14 @@ const agregarLista = async() => {
         };
 
         listaProductos.value.push(nuevoProducto);
-        listaProductosTemp.value.push(nuevoProducto);
+        listaProductosTemp.value.push(JSON.parse(JSON.stringify(nuevoProducto)));
         limpiarCamposProducto();
 
         // Crear un array de promesas para todas las operaciones
 
 
     }
-
-    const promises3 = listaProductos.value.map(async (producto) => {
-
-
-//TODO ver resta no jala
-            if (!producto || typeof producto !== 'object') {
-                throw new Error('Producto inválido');
-            }
-
-            if ('id' in producto) {
-                console.log(producto.cantidad, 'estosevia')
-                const formData = new FormData();
-                formData.append('nombre', producto.nombre);
-                formData.append('cantidad', producto.cantidad);
-                formData.append('descripcion', producto.descripcion);
-                formData.append('observacion', producto.observacion);
-                formData.append('marca', producto.marca);
-                formData.append('precio_compra', producto.precio_compra);
-                formData.append('precio_venta', producto.precio_venta);
-                formData.append('codigo_qr', producto.codigo_qr);
-
-                if (producto.imagen) {
-                    formData.append('imagen', producto.imagen);
-                }
-                producto.cantidad =  cantTemp.value  - producto.cantidad
-                await productoStore.updateProducto(producto);
-
-            } else {
-                console.log('Nuevo producto sin ID, generando uno...');
-                producto.id = nanoid(9);
-                const formData = new FormData();
-                formData.append('nombre', nuevoNombre);
-                formData.append('id', producto.id);
-                formData.append('cantidad', producto.cantidad);
-                formData.append('descripcion', producto.descripcion);
-                formData.append('observacion', producto.observacion);
-                formData.append('marca', producto.marca);
-                formData.append('precio_compra', producto.precio_compra);
-                formData.append('precio_venta', producto.precio_venta);
-                formData.append('codigo_qr', producto.codigo_qr);
-
-                if (producto.imagen) {
-                    formData.append('imagen', producto.imagen);
-                }
-
-                await productoStore.guardarProducto(producto);
-
-            }
-        });
-
-        await Promise.all(promises3);
-        cantTemp.value = 0
+        reiniciarFormulario();
 };
 
 
@@ -671,15 +804,116 @@ const colProductos = [
   { name: 'id', label: 'Codigo', field: 'id' },
 { name: 'nombre', label: 'Nombre', field: 'nombre' },
 { name: 'cantidad', label: 'Cantidad', field: 'cantidad' },
-// { name: 'descripcion', label: 'Descripción', field: 'descripcion' },
-// { name: 'observacion', label: 'Observación', field: 'observacion' },
-// { name: 'marca', label: 'Marca', field: 'marca' },
-// { name: 'precio_compra', label: 'Precio Compra', field: 'precio_compra' },
 { name: 'precio_venta', label: 'Precio Venta', field: 'precio_venta' },
-// { name: 'codigo_qr', label: 'Código QR', field: 'codigo_qr' }
+// { name: 'ver', label: 'Ver', field: 'ver' },
+// { name: 'editar', label: 'Editar', field: 'editar' },
 ]
 
-const validarYGuardarData = async () => {}
+const validarYGuardarData = async () => {
+
+  if (step.value === 1) {
+
+    try {
+
+
+     const promises = listaProductos.value.map(async (producto) => {
+            producto.cantidad = Number(producto.cantidadFalta) - Number(producto.cantidad)
+            console.log(producto.cantidad)
+            if (!producto || typeof producto !== 'object') {
+                throw new Error('Producto inválido');
+            }
+
+            if ('id' in producto) {
+              const formData = new FormData();
+                formData.append('nombre', producto.nombre);
+                formData.append('cantidad', producto.cantidad);
+                formData.append('descripcion', producto.descripcion);
+                formData.append('observacion', producto.observacion);
+                formData.append('marca', producto.marca);
+                formData.append('precio_compra', producto.precio_compra);
+                formData.append('precio_venta', producto.precio_venta);
+                formData.append('codigo_qr', producto.codigo_qr);
+
+                if (producto.imagen) {
+                  formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
+                }
+
+                await productoStore.updateProducto(producto);
+            } else {
+              producto.id = nanoid(8)
+              const formData = new FormData();
+                formData.append('id', producto.id);
+                formData.append('nombre', nuevoNombre ? nuevoNombre : producto.nombre);
+                formData.append('cantidad', producto.cantidad);
+                formData.append('descripcion', producto.descripcion);
+                formData.append('observacion', producto.observacion);
+                formData.append('marca', producto.marca);
+                formData.append('precio_compra', producto.precio_compra);
+                formData.append('precio_venta', producto.precio_venta);
+                formData.append('codigo_qr', producto.codigo_qr);
+
+                if (producto.imagen) {
+                  formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
+                }
+
+                await productoStore.guardarProducto(producto);
+
+
+            }
+
+        });
+          //
+        // Ejecutar todas las promesas en paralelo
+        await Promise.all(promises);
+
+
+
+
+    } catch (error) {
+        console.error('Error al procesar los datos:', error);
+        // Manejar el error apropiadamente
+    } finally {
+      step.value++
+    }
+
+} else if (step.value === 2) {
+try {
+  venta.value.precio_compra = totalVentas
+  venta.value.id = nanoid(8)
+  const formData = new FormData();
+formData.append('id', venta.value.id);
+formData.append('nombre', venta.value.nombre);
+formData.append('cantidad', venta.value.cantidad);
+formData.append('descripcion', venta.value.descripcion);
+formData.append('observacion', venta.value.observacion);
+formData.append('marca', venta.value.marca);
+formData.append('precio_compra', venta.value.precio_compra);
+formData.append('precio_venta', venta.value.precio_venta);
+formData.append('codigo_qr', venta.value.codigo_qr);
+
+// Añadir la imagen si está presente
+if (venta.value.imagen) {
+    formData.append('imagen', venta.value.imagen);
+}
+
+// Guardar la venta (suponiendo que `productoStore.guardarProducto` es la función para guardar)
+await productoStore.guardarProducto(venta.value);
+step.value++
+} catch (error) {
+console.log(error, 'error')
+}
+
+}
+
+
+}
+const totalVentas = computed(() => {
+  return listaProductosTemp.value.reduce((total, producto) => {
+    const cantidad = parseInt(producto.cantidad, 10);
+    const precioVenta = parseFloat(producto.precio_venta);
+    return total + (cantidad * precioVenta);
+  }, 0);
+});
 </script>
 
 
