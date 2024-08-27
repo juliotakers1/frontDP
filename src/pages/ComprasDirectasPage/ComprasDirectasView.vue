@@ -818,7 +818,7 @@ const validarYGuardarData = async () => {
 
      const promises = listaProductos.value.map(async (producto) => {
             producto.cantidad = Number(producto.cantidadFalta) - Number(producto.cantidad)
-            console.log(producto.cantidad)
+
             if (!producto || typeof producto !== 'object') {
                 throw new Error('Producto inválido');
             }

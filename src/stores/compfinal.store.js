@@ -19,7 +19,7 @@ export const usefacturaFinalStore = defineStore({
     async obtenerFacturaFinal() {
       try {
         const res = await axios.get('http://localhost:3000/factura-compra/');
-        this.facturas = res.data
+        this.facturasFinales = res.data.factura_compras
       } catch (error) {
         console.error('Error al cargar facturas:', error);
         throw error;

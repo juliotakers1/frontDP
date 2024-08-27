@@ -26,7 +26,8 @@ export const useFacturaStore = defineStore({
     async obtenerFactura() {
       try {
         const res = await axios.get('http://localhost:3000/factura/');
-        this.facturas = res.data
+        this.facturas = res.data.facturas
+        console.log(this.facturas, 'store')
       } catch (error) {
         console.error('Error al cargar facturas:', error);
         throw error;

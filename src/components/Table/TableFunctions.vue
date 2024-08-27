@@ -20,7 +20,7 @@
             {{ col.label }}
           </q-th>
            <q-th auto-width >Ver</q-th>
-           <q-th auto-width >Editar</q-th>
+           <!-- <q-th auto-width >Editar</q-th> -->
         </q-tr>
       </template>
 
@@ -41,10 +41,10 @@
             <q-btn round color="positive" icon="visibility" size="sm" @click="viewProducto(props.row)" />
             <!-- <q-btn color="primary" label="Ver" /> -->
           </q-td>
-          <q-td auto-width>
-            <!-- <q-btn color="warning" label="Editar"   /> -->
+          <!-- <q-td auto-width>
+
             <q-btn round color="warning" icon="edit" size="sm"  @click="editProducto(props.row)"  />
-          </q-td>
+          </q-td> -->
         </q-tr>
         <!-- <q-tr v-show="props.expand" :props="props">
           <q-td colspan="100%">
@@ -133,7 +133,7 @@
       </q-card>
     </q-dialog>
     <!-- edit -->
-    <q-dialog v-model="editprompt" >
+    <!-- <q-dialog v-model="editprompt" >
       <q-card style="min-width: 350px">
         <q-card-section>
           <div class="text-h6">Detalles del Producto</div>
@@ -152,12 +152,7 @@
             v-model="selectedProducto.nombre"
 
           />
-          <!-- <q-input
-            dense
-            label="Cantidad"
-            v-model="selectedProducto.cantidad"
 
-          /> -->
           <q-input
             dense
             label="Cantidad"
@@ -210,7 +205,7 @@
           <q-btn flat label="Guardar" color="primary"  />
         </q-card-actions>
       </q-card>
-    </q-dialog>
+    </q-dialog> -->
   </div>
 </template>
 
