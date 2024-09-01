@@ -38,7 +38,12 @@ const routes = [
       meta: { requiredAuthorization: true,
        roles: ['ADMIN','USER']
      },
-  },
+    },
+    { path: '/ventas', component: () => import('pages/VentasPages/VentaView.vue'),
+      meta: { requiredAuthorization: true,
+       roles: ['ADMIN','USER']
+     },
+    },
     ]
   },
 

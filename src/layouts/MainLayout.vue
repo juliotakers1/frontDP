@@ -70,13 +70,13 @@
             </q-item-section>
           </q-item>
 
-          <q-item clickable v-ripple>
+          <q-item clickable v-ripple :active="link === 'ventas'" @click="link = 'ventas'" active-class="my-menu-link">
             <q-item-section avatar>
-              <q-icon name="drafts" />
+              <q-icon name="payments" />
             </q-item-section>
 
             <q-item-section>
-              Drafts
+              <router-link to="/ventas" style="text-decoration: none; color: black;">Ventas</router-link>
             </q-item-section>
           </q-item>
         </q-list>

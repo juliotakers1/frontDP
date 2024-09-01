@@ -403,7 +403,7 @@
   <template v-slot:navigation>
     <q-stepper-navigation>
       <q-btn @click="validarYGuardarData" color="primary" :label="step === 4 ? 'Finalizar' : 'Continuar'"  :disable="factura.no_documento ===''"  />
-      <q-btn v-if="step > 1 && step < 4" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
+      <!-- <q-btn v-if="step > 1 && step < 4" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" /> -->
     </q-stepper-navigation>
   </template>
 </q-stepper>
@@ -462,7 +462,8 @@ const tab = ref('facturas')
       precio_compra: '',
       precio_venta: '',
       imagen: null,
-      codigo_qr: ''
+      codigo_qr: '',
+      categoria: '',
     })
     const facturaFinal = ref({
       id_factura: '',
@@ -764,7 +765,8 @@ const deleteFacturaID = ref()
       ...producto.value,
       nombre: producto.value.nombre.nombre,
       usuario: usr,
-      cantidad: producto.value.cantidad,
+      cantidad: Number(producto.value.cantidad) + Number(nuevaCantidad.value),
+      categoria: 'none',
       descripcion: producto.value.descripcion,
       observacion: producto.value.observacion,
       marca: producto.value.marca,
@@ -775,13 +777,16 @@ const deleteFacturaID = ref()
       createdAt: producto.value.createdAt || new Date().toISOString(),
       updatedAt: producto.value.updatedAt || new Date().toISOString()
     };
-    console.log('si entro');
+    console.log(nuevoProducto, 'nuevoProducto1')
+     // Agrega el nuevoProducto a listaProductosTemp
+  listaProductosTemp.value.push(nuevoProducto);
   } else {
     // Crea nuevoProducto con valores predeterminados si no existe producto.value.nombre
     nuevoProducto = {
       nombre: nuevoNombre.value,
       usuario: usr,
-      cantidad: producto.value.cantidad,
+      cantidad: Number(producto.value.cantidad) + Number(nuevaCantidad.value),
+      categoria: 'none',
       descripcion: producto.value.descripcion,
       observacion: producto.value.observacion,
       marca: producto.value.marca,
@@ -792,51 +797,51 @@ const deleteFacturaID = ref()
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    console.log('entro al otro');
-  }
-
-  // Agrega el nuevoProducto a listaProductosTemp
+    console.log(nuevoProducto, 'nuevoProducto2')
+     // Agrega el nuevoProducto a listaProductosTemp
   listaProductosTemp.value.push(nuevoProducto);
-
   // Crea promesas para procesar cada producto en listaProductosTemp
   const promises = listaProductosTemp.value.map(async (producto) => {
-    try {
-      console.log('en el promise', producto);
-      producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value);
+          try {
+            console.log('en el promise', producto);
+            producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value);
 
-      if (!producto || typeof producto !== 'object') {
-        throw new Error('Producto inválido');
-      }
+            if (!producto || typeof producto !== 'object') {
+              throw new Error('Producto inválido');
+            }
+            const formData = new FormData();
+            formData.append('usuario', usr);
+            formData.append('nombre', producto.nombre);
+            formData.append('cantidad', producto.cantidad);
+            formData.append('categoria', producto.categoria);
+            formData.append('descripcion', producto.descripcion);
+            formData.append('observacion', producto.observacion);
+            formData.append('marca', producto.marca);
+            formData.append('precio_compra', producto.precio_compra);
+            formData.append('precio_venta', producto.precio_venta);
+            formData.append('codigo_qr', producto.codigo_qr);
 
-      const formData = new FormData();
-      formData.append('usuario', usr);
-      formData.append('nombre', producto.nombre);
-      formData.append('cantidad', producto.cantidad);
-      formData.append('descripcion', producto.descripcion);
-      formData.append('observacion', producto.observacion);
-      formData.append('marca', producto.marca);
-      formData.append('precio_compra', producto.precio_compra);
-      formData.append('precio_venta', producto.precio_venta);
-      formData.append('codigo_qr', producto.codigo_qr);
+            if (producto.imagen) {
+              formData.append('imagen', producto.imagen);
+            }
 
-      if (producto.imagen) {
-        formData.append('imagen', producto.imagen);
-      }
+            if ('id' in producto) {
+              await productoStore.updateProductoTemporal(producto);
+            } else {
+              await productoStore.guardarProductoTemporal(producto);
+            }
+          } catch (error) {
+            console.error('Error en la promesa:', error);
+          }
+        });
 
-      if ('id' in producto) {
-        await productoStore.updateProductoTemporal(producto);
-        console.log(producto, 'si guardo');
-      } else {
-        await productoStore.guardarProductoTemporal(producto);
-        console.log(producto, 'no guardo');
-      }
-    } catch (error) {
-      console.error('Error en la promesa:', error);
-    }
-  });
+        // Ejecuta todas las promesas en paralelo
+        await Promise.all(promises);
+  }
 
-  // Ejecuta todas las promesas en paralelo
-  await Promise.all(promises);
+
+
+
 
   // Reinicia el formulario después de procesar las promesas
   reiniciarFormulario();
@@ -847,6 +852,7 @@ const deleteFacturaID = ref()
 const validarYGuardarData = async () => {
   if (step.value === 1) {
     try {
+
       // Verifica si hay facturas temporales y avanza al siguiente paso si es así
       if (facturaStore.facturasTemporales) {
         step.value++;
@@ -862,35 +868,38 @@ const validarYGuardarData = async () => {
     step.value++;
   } else if (step.value === 3) {
     // Calcular productosCompletos sin eliminar el id si el producto ya existe en productoStore.productos
-    const productosCompletos = listaProductosTemp.value.map(producto => {
-      const encontrado = productoStore.productos.find(p => p.nombre === producto.nombre);
-      if (encontrado) {
-        // Mantener el id del producto existente
-        return { ...producto, id: encontrado.id };
-      } else {
-        // Eliminar el id si el producto no existe en productoStore
-        const { id, ...productoSinId } = producto;
-        return productoSinId;
-      }
-    });
+    // const productosCompletos = listaProductosTemp.value.map(producto => {
+    //   const encontrado = productoStore.productos.find(p => p.nombre === producto.nombre);
+    //   if (encontrado) {
 
-    listaProductos.value = productosCompletos;
+    //     console.log(encontrado, 'encontrado')
+    //     return encontrado
+    //   } else {
+
+    //     const {  ...productoSinId } = producto;
+    //     return productoSinId;
+    //   }
+    // });
+
+
     factura.value.id = nanoid(8);
     await facturaStore.guardarFactura(factura.value);
     step.value++;
   } else if (step.value === 4) {
     try {
       // Crear un array de promesas para todas las operaciones
-      const promises = listaProductos.value.map(async (producto) => {
+      console.log(listaProductosTemp.value,'listaProductosTemp.value')
+      const promises = listaProductosTemp.value.map(async (producto) => {
         producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value);
 
         if (!producto || typeof producto !== 'object') {
           throw new Error('Producto inválido');
         }
-
+//TODO sprimer test si guardo y borro de los temps
         const formData = new FormData();
         formData.append('nombre', producto.nombre);
         formData.append('cantidad', producto.cantidad);
+        formData.append('categoria', producto.categoria);
         formData.append('descripcion', producto.descripcion);
         formData.append('observacion', producto.observacion);
         formData.append('marca', producto.marca);
@@ -902,8 +911,10 @@ const validarYGuardarData = async () => {
           formData.append('imagen', producto.imagen); // Añade la imagen si está seleccionada
         }
 
+        console.log(producto, 'productodsa')
         if ('id' in producto) {
           // Actualizar producto si ya tiene id
+          console.log('derntro id')
           await productoStore.updateProducto(producto);
         } else {
           // Guardar nuevo producto si no tiene id
@@ -926,6 +937,7 @@ const validarYGuardarData = async () => {
       await Promise.all(promises);
 
       // Borrar productos temporales que tengan id
+      if (listaProductosTemp.value.length > 0) {
       const promises2 = listaProductosTemp.value.map(async (prd) => {
         if (prd.id) {
           await productoStore.deleteProducto(prd.id);
@@ -933,7 +945,7 @@ const validarYGuardarData = async () => {
       });
 
       await Promise.all(promises2);
-
+    }
       // Borrar factura si es necesario
       if (deleteFacturaID.value[0]) {
         await facturaStore.deleteFactura(deleteFacturaID.value[0]);
