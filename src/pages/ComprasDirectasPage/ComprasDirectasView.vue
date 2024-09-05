@@ -252,7 +252,7 @@
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese Marca']"
         />
-        <q-select outlined dense v-model="venta.categoria" :options="cats" label="Categoria" class="col-md-4 col-sm-12 col-xs-12 q-mb-md" />
+        <q-select outlined dense v-model="venta.categoria" :options="cats" label="Categoria" class="col-md-12 col-sm-12 col-xs-12 q-mb-md" />
         <q-input
           class="col-12 q-mb-md"
           outlined
@@ -277,7 +277,7 @@
           class="col-md-4 col-sm-12 col-xs-12 q-mb-md"
           outlined
           dense
-          v-model="totalVentas"
+          v-model="precioCompra"
           label="Precio de Compra *"
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese el Precio de Compra']"
@@ -343,7 +343,7 @@
 <template v-slot:navigation>
 <q-stepper-navigation>
 <q-btn @click="validarYGuardarData" color="primary" :label="step === 3 ? 'Finalizar' : 'Continuar'"    />
-<q-btn v-if="step > 1 && step < 3" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" />
+<!-- <q-btn v-if="step > 1 && step < 3" flat color="primary" @click="$refs.stepper.previous()" label="Atras" class="q-ml-sm" /> -->
 </q-stepper-navigation>
 </template>
 </q-stepper>
@@ -808,7 +808,7 @@ const colProductos = [
 // { name: 'ver', label: 'Ver', field: 'ver' },
 // { name: 'editar', label: 'Editar', field: 'editar' },
 ]
-
+//TODO despues de guardar en producto guardar en otra tabla en la bd como factura compra pra saber como se construyo
 const validarYGuardarData = async () => {
 
   if (step.value === 1) {
@@ -874,6 +874,7 @@ const validarYGuardarData = async () => {
         // Manejar el error apropiadamente
     } finally {
       step.value++
+      // window.location.reload()
     }
 
 } else if (step.value === 2) {
@@ -903,6 +904,11 @@ step.value++
 console.log(error, 'error')
 }
 
+}else if (step.value === 3) {
+
+      step.value=1
+      window.location.reload()
+
 }
 
 
@@ -914,6 +920,30 @@ const totalVentas = computed(() => {
     return total + (cantidad * precioVenta);
   }, 0);
 });
+
+const precioCompra = ref(0); // Esto se actualizará dinámicamente
+
+// Watch para reaccionar cuando se cambie la categoría
+watch(
+  () => venta.value.categoria,
+  (newCategoria) => {
+    if (newCategoria === 'producto') {
+      precioCompra.value = totalVentas.value;
+    } else {
+      precioCompra.value = 0; // Resetear a 0 si no es 'producto'
+    }
+  }
+);
+
+// Watch para actualizar el valor de totalVentas cuando cambie el precioCompra
+watch(
+  () => precioCompra.value,
+  (newPrecio) => {
+    if (venta.value.categoria === 'producto') {
+      totalVentas.value = newPrecio;
+    }
+  }
+);
 </script>
 
 

@@ -1,17 +1,36 @@
 <template>
   <div>
+    <div class="row q-gutter-md q-pa-md justify-end">
+      <q-input
+      v-model="fechaInicio"
+      label="Fecha Inicio"
+      type="date"
+      outlined
+      class="col-md-4 col-sm-12"
+    />
+    <q-input
+      v-model="fechaFin"
+      label="Fecha Fin"
+      type="date"
+      outlined
+      class="col-md-4 col-sm-12"
+    />
+
+    <q-btn label="Filtrar" @click="filtrarPorFecha"  class="col-md-2 col-sm-12" />
+    </div>
+    <!-- Inputs para seleccionar la fecha de inicio y fin -->
+
+
     <q-table
       flat bordered
       :title="title"
-      :rows="rowsProp"
+      :rows="filteredRows"
       :columns="columnsProp"
       row-key="name"
-
     >
 
       <template v-slot:header="props">
-        <q-tr :props="props"  >
-          <!-- <q-th auto-width /> -->
+        <q-tr :props="props">
           <q-th
             v-for="col in props.cols"
             :key="col.name"
@@ -19,50 +38,49 @@
           >
             {{ col.label }}
           </q-th>
-           <q-th auto-width >Ver</q-th>
-           <q-th auto-width >Editar</q-th>
+          <q-th auto-width>Ver</q-th>
+          <q-th auto-width>Editar</q-th>
         </q-tr>
       </template>
 
       <template v-slot:body="props">
-        <q-tr :props="props" >
-          <!-- <q-td auto-width>
-            <q-btn size="sm" color="accent" round dense @click="eliminarProducto(props.row)"  icon="remove" />
-          </q-td> -->
+        <q-tr :props="props">
           <q-td
             v-for="col in props.cols"
             :key="col.name"
             :props="props"
-
           >
             {{ col.value }}
           </q-td>
           <q-td auto-width>
-            <q-btn round color="positive" icon="visibility" size="sm" @click="obtenerRow(props.row)"  />
-            <!-- <q-btn color="primary" label="Ver" /> -->
+            <q-btn
+              round
+              color="positive"
+              icon="visibility"
+              size="sm"
+              @click="obtenerRow(props.row)"
+            />
           </q-td>
           <q-td auto-width>
-
-            <q-btn round color="warning" icon="edit" size="sm"    />
+            <q-btn
+              round
+              color="warning"
+              icon="edit"
+              size="sm"
+            />
           </q-td>
         </q-tr>
-
-
       </template>
-      <!-- Slot para la columna 'ver' -->
 
     </q-table>
-
-
-
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { useCompraStore } from 'src/stores/compra.store';
 import { usefacturaFinalStore } from "src/stores/compfinal.store";
-// Define las props recibidas
+
 const productoStore = useCompraStore();
 const facFinalStore = usefacturaFinalStore();
 const emit = defineEmits(['producto-seleccionado']);
@@ -71,60 +89,59 @@ const props = defineProps({
   rowsProp: Array,
   title: String
 });
-const viewprompt = ref(false)
-const editprompt = ref(false)
-const selectedProducto = ref()
+
+// Variables para las fechas de filtro
+const fechaInicio = ref(null);
+const fechaFin = ref(null);
+
+// Producto seleccionado
 const producto = ref({
-   id: '',
-   nombre: '',
-   cantidad: 0,
-   descripcion: '',
-   observacion: '',
-   marca: '',
-   precio_compra: '',
-   precio_venta: '',
-   imagen: null,
-   codigo_qr: '',
- })
-const obtenerRow = (factura) => {
-const verRow = factura
-
-const proc = facFinalStore.facturasFinales.find(e => verRow.id === e.id_factura);
-const productoFinal = productoStore.productos.find(e => proc.id_producto=== e.id);
-producto.value = productoFinal
-console.log([producto.value], 'aaa')
-emit('producto-seleccionado', [producto.value]);
-}
-//TODO ya funciona y muestra la tabla pero verificar cuando es mas de 1 producto
-onMounted(async() => {
-  await facFinalStore.obtenerFacturaFinal()
+  id: '',
+  nombre: '',
+  cantidad: 0,
+  descripcion: '',
+  observacion: '',
+  marca: '',
+  precio_compra: '',
+  precio_venta: '',
+  imagen: null,
+  codigo_qr: ''
 });
-// const  actualizarInformacion = async() => {
 
-            // try {
-            //   const formData = new FormData();
-            //     formData.append('nombre', selectedProducto.value.nombre);
-            //     // formData.append('cantidad', selectedProducto.value.cantidad);
-            //     formData.append('descripcion', selectedProducto.value.descripcion);
-            //     formData.append('observacion', selectedProducto.value.observacion);
-            //     formData.append('marca', selectedProducto.value.marca);
-            //     formData.append('precio_compra', selectedProducto.value.precio_compra);
-            //     formData.append('precio_venta', selectedProducto.value.precio_venta);
-            //     formData.append('codigo_qr', selectedProducto.value.codigo_qr);
-            //     formData.append('categoria', selectedProducto.value.categoria);
-            //     if (selectedProducto.value.imagen) {
-            //       formData.append('imagen', selectedProducto.value.imagen); // Añade la imagen si está seleccionada
-            //     }
+// Función para obtener la fila seleccionada
+const obtenerRow = (factura) => {
+  const verRow = factura;
+  const proc = facFinalStore.facturasFinales.filter(e => verRow.id === e.id_factura);
+  const productosFinales = proc.map(p => productoStore.productos.find(e => p.id_producto === e.id));
+  producto.value = productosFinales;
+  emit('producto-seleccionado', producto.value);
+};
 
-            //     await productoStore.updateProducto(selectedProducto.value);
-            // } catch (error) {
-            //   console.log(error)
-            // }
+// Computed property para filtrar las filas en función de las fechas
+const filteredRows = computed(() => {
+  if (!fechaInicio.value || !fechaFin.value) {
+    return props.rowsProp;
+  }
 
-            // }
+  // Convierte las fechas a objetos Date
+  const startDate = new Date(fechaInicio.value);
+  const endDate = new Date(fechaFin.value);
 
-//             const eliminarProducto = (producto) => {
-//   // Filtra la lista para excluir el producto con el ID dado
-//   selectedProducto.value = selectedProducto.value.findIndex(p => p.id !== producto.id);
-// };
+  // Filtra las filas entre las fechas de inicio y fin
+  return props.rowsProp.filter(row => {
+    const emisionDate = new Date(row.fecha_emision);
+    return emisionDate >= startDate && emisionDate <= endDate;
+  });
+});
+
+// Función para filtrar las filas por fecha
+const filtrarPorFecha = () => {
+  // La lógica del filtro ya está en `filteredRows`
+  console.log('Filtrando por fechas:', fechaInicio.value, fechaFin.value);
+};
+
+// Obtén los datos de la tienda en el hook `onMounted`
+onMounted(async () => {
+  await facFinalStore.obtenerFacturaFinal();
+});
 </script>

@@ -44,6 +44,16 @@ const routes = [
        roles: ['ADMIN','USER']
      },
     },
+    { path: '/proveedores', component: () => import('pages/ProveedoresPage/ProveedorView.vue'),
+      meta: { requiredAuthorization: true,
+       roles: ['ADMIN','USER']
+     },
+    },
+    { path: '/clientes', component: () => import('pages/ClientesPages/ClienteView.vue'),
+      meta: { requiredAuthorization: true,
+       roles: ['ADMIN','USER']
+     },
+    },
     ]
   },
 

@@ -39,7 +39,7 @@
           </q-td>
           <q-td auto-width>
             <q-btn round color="positive" icon="visibility" size="sm" @click="viewProducto(props.row)" />
-            <!-- <q-btn color="primary" label="Ver" /> -->
+            <q-btn round color="negative" icon="delete" size="sm" @click="eliminarProducto(props.row)" />
           </q-td>
           <!-- <q-td auto-width>
 
@@ -132,80 +132,6 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-    <!-- edit -->
-    <!-- <q-dialog v-model="editprompt" >
-      <q-card style="min-width: 350px">
-        <q-card-section>
-          <div class="text-h6">Detalles del Producto</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <q-input
-            dense
-            label="Código"
-            v-model="selectedProducto.id"
-            readonly
-          />
-          <q-input
-            dense
-            label="Nombre"
-            v-model="selectedProducto.nombre"
-
-          />
-
-          <q-input
-            dense
-            label="Cantidad"
-            v-model="selectedProducto.cantidadFalta"
-
-          />
-          <q-input
-            dense
-            label="Código QR"
-            v-model="selectedProducto.codigo_qr"
-
-          />
-          <q-input
-            dense
-            label="Descripción"
-            v-model="selectedProducto.descripcion"
-
-          />
-          <q-input
-            dense
-            label="Marca"
-            v-model="selectedProducto.marca"
-
-          />
-          <q-input
-            dense
-            label="Observación"
-            v-model="selectedProducto.observacion"
-
-          />
-          <q-input
-            dense
-            label="Precio de Compra"
-            v-model="selectedProducto.precio_compra"
-
-          />
-          <q-input
-            dense
-            label="Precio de Venta"
-            v-model="selectedProducto.precio_venta"
-
-          />
-
-          <img :src="selectedProducto.imagen" v-if="selectedProducto.imagen" alt="Imagen no valida" width="100px" height="100px">
-
-        </q-card-section>
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cerrar" color="primary" @click="editprompt = false" />
-          <q-btn flat label="Guardar" color="primary"  />
-        </q-card-actions>
-      </q-card>
-    </q-dialog> -->
   </div>
 </template>
 
@@ -257,8 +183,13 @@ const  actualizarInformacion = async() => {
 
             }
 
-//             const eliminarProducto = (producto) => {
-//   // Filtra la lista para excluir el producto con el ID dado
-//   selectedProducto.value = selectedProducto.value.findIndex(p => p.id !== producto.id);
-// };
+// Función para eliminar el producto de la lista directamente
+const eliminarProducto = (producto) => {
+  const index = props.rowsProp.findIndex(item => item.id === producto.id);
+  if (index !== -1) {
+    props.rowsProp.splice(index, 1);  // Eliminar el producto de la lista original
+  }
+  console.log('Producto eliminado:', producto);
+};
+
 </script>

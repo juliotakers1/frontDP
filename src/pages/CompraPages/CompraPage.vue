@@ -5,6 +5,7 @@
           <q-btn round color="secondary" icon="add" @click="tabla = false, formulario = true" />
         </div>
         <TableFacturas :columns-prop="colFacturas" :rows-prop="facturaStore.facturas" :title="'Facturas'" @producto-seleccionado="actualizarProductoSeleccionado" />
+
         <TablaGeneral v-if="prProducto" :columns-prop="colProductos" :rows-prop="prProducto" :title="'Productos'" />
 
       </div>
@@ -364,6 +365,7 @@
       <input type="file" @change="handleFileChange"  class="col-md-4 col-sm-12 q-mb-md" />
         <p></p>
         <img :src="imagePreview" alt="" v-if="imagePreview" width="100px" height="100px">
+        <!-- <img :src="producto.imagen" alt="" v-if="!imagePreview" width="100px" height="100px"> TODO ver si guarda por esto la img -->
     </div>
 
     <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
@@ -632,6 +634,7 @@ function limpiarCamposProducto() {
     imagen: '',
     codigo_qr: ''
   }
+  imagePreview.value = ''
 }
 function limpiarCamposFactura() {
   factura.value = {
@@ -763,6 +766,7 @@ const deleteFacturaID = ref()
     // Crea nuevoProducto con los valores de producto.value
     nuevoProducto = {
       ...producto.value,
+      id: producto.value.nombre.id,
       nombre: producto.value.nombre.nombre,
       usuario: usr,
       cantidad: Number(producto.value.cantidad) + Number(nuevaCantidad.value),
@@ -778,6 +782,7 @@ const deleteFacturaID = ref()
       updatedAt: producto.value.updatedAt || new Date().toISOString()
     };
     console.log(nuevoProducto, 'nuevoProducto1')
+    console.log(producto.value, 'prod')
      // Agrega el nuevoProducto a listaProductosTemp
   listaProductosTemp.value.push(nuevoProducto);
   } else {
@@ -799,44 +804,44 @@ const deleteFacturaID = ref()
     };
     console.log(nuevoProducto, 'nuevoProducto2')
      // Agrega el nuevoProducto a listaProductosTemp
-  listaProductosTemp.value.push(nuevoProducto);
+    listaProductosTemp.value.push(nuevoProducto);
   // Crea promesas para procesar cada producto en listaProductosTemp
-  const promises = listaProductosTemp.value.map(async (producto) => {
-          try {
-            console.log('en el promise', producto);
-            producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value);
+  // const promises = listaProductosTemp.value.map(async (producto) => {
+  //         try {
+  //           console.log('en el promise', producto);
+  //           producto.cantidad = Number(producto.cantidad) + Number(nuevaCantidad.value);
 
-            if (!producto || typeof producto !== 'object') {
-              throw new Error('Producto inválido');
-            }
-            const formData = new FormData();
-            formData.append('usuario', usr);
-            formData.append('nombre', producto.nombre);
-            formData.append('cantidad', producto.cantidad);
-            formData.append('categoria', producto.categoria);
-            formData.append('descripcion', producto.descripcion);
-            formData.append('observacion', producto.observacion);
-            formData.append('marca', producto.marca);
-            formData.append('precio_compra', producto.precio_compra);
-            formData.append('precio_venta', producto.precio_venta);
-            formData.append('codigo_qr', producto.codigo_qr);
+  //           if (!producto || typeof producto !== 'object') {
+  //             throw new Error('Producto inválido');
+  //           }
+  //           const formData = new FormData();
+  //           formData.append('usuario', usr);
+  //           formData.append('nombre', producto.nombre);
+  //           formData.append('cantidad', producto.cantidad);
+  //           formData.append('categoria', producto.categoria);
+  //           formData.append('descripcion', producto.descripcion);
+  //           formData.append('observacion', producto.observacion);
+  //           formData.append('marca', producto.marca);
+  //           formData.append('precio_compra', producto.precio_compra);
+  //           formData.append('precio_venta', producto.precio_venta);
+  //           formData.append('codigo_qr', producto.codigo_qr);
 
-            if (producto.imagen) {
-              formData.append('imagen', producto.imagen);
-            }
+  //           if (producto.imagen) {
+  //             formData.append('imagen', producto.imagen);
+  //           }
 
-            if ('id' in producto) {
-              await productoStore.updateProductoTemporal(producto);
-            } else {
-              await productoStore.guardarProductoTemporal(producto);
-            }
-          } catch (error) {
-            console.error('Error en la promesa:', error);
-          }
-        });
+  //           if ('id' in producto) {
+  //             await productoStore.updateProductoTemporal(producto);
+  //           } else {
+  //             await productoStore.guardarProductoTemporal(producto);
+  //           }
+  //         } catch (error) {
+  //           console.error('Error en la promesa:', error);
+  //         }
+  //       });
 
-        // Ejecuta todas las promesas en paralelo
-        await Promise.all(promises);
+
+  //       await Promise.all(promises);
   }
 
 
@@ -895,7 +900,7 @@ const validarYGuardarData = async () => {
         if (!producto || typeof producto !== 'object') {
           throw new Error('Producto inválido');
         }
-//TODO sprimer test si guardo y borro de los temps
+//TODO ver porque solo 1 manda a factura compra
         const formData = new FormData();
         formData.append('nombre', producto.nombre);
         formData.append('cantidad', producto.cantidad);
@@ -916,6 +921,13 @@ const validarYGuardarData = async () => {
           // Actualizar producto si ya tiene id
           console.log('derntro id')
           await productoStore.updateProducto(producto);
+          facturaFinal.value = {
+            id_factura: factura.value.id,
+            id_producto: producto.id,
+            precio_compra: producto.precio_compra,
+            precio_venta: producto.precio_venta,
+          };
+        await facturaFinalStore.guardarFacturaFinal(facturaFinal.value);
         } else {
           // Guardar nuevo producto si no tiene id
           producto.id = nanoid(8);
@@ -929,32 +941,39 @@ const validarYGuardarData = async () => {
             precio_compra: producto.precio_compra,
             precio_venta: producto.precio_venta,
           };
+        await facturaFinalStore.guardarFacturaFinal(facturaFinal.value);
 
-          await facturaFinalStore.guardarFacturaFinal(facturaFinal.value);
+
         }
+
       });
 
       await Promise.all(promises);
 
       // Borrar productos temporales que tengan id
-      if (listaProductosTemp.value.length > 0) {
-      const promises2 = listaProductosTemp.value.map(async (prd) => {
-        if (prd.id) {
-          await productoStore.deleteProducto(prd.id);
-        }
-      });
+      // if (listaProductosTemp.value.length > 0) {
+      // const promises2 = listaProductosTemp.value.map(async (prd) => {
+      //   if (prd.id) {
+      //     await productoStore.deleteProducto(prd.id);
+      //   }
+      // });
 
-      await Promise.all(promises2);
-    }
+      // await Promise.all(promises2);
+    // }
       // Borrar factura si es necesario
       if (deleteFacturaID.value[0]) {
+
         await facturaStore.deleteFactura(deleteFacturaID.value[0]);
+
         limpiarCamposFactura();
       }
 
       step.value++;
     } catch (error) {
       console.error('Error al procesar los datos:', error);
+    } finally {
+      step.value = 1;
+      window.location.reload()
     }
   }
 };
@@ -977,6 +996,8 @@ const reiniciarFormulario = () => {
     imagen: null,
   };
   nuevaCantidad.value = ''
+  nuevoNombre.value = ''
+  imagePreview.value = ''
 };
  //fin lista
 

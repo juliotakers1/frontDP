@@ -28,6 +28,7 @@ export const useCompraStore = defineStore({
       try {
         const res = await axios.get('http://localhost:3000/producto/');
         this.productos = res.data.productos
+        console.log(this.productos, 'enstore prd')
       } catch (error) {
         console.error('Error al cargar facturas:', error);
         throw error;

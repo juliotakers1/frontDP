@@ -79,6 +79,24 @@
               <router-link to="/ventas" style="text-decoration: none; color: black;">Ventas</router-link>
             </q-item-section>
           </q-item>
+          <q-item clickable v-ripple :active="link === 'proveedores'" @click="link = 'proveedores'" active-class="my-menu-link">
+            <q-item-section avatar>
+              <q-icon name="engineering" />
+            </q-item-section>
+
+            <q-item-section>
+              <router-link to="/proveedores" style="text-decoration: none; color: black;">Proveedores</router-link>
+            </q-item-section>
+          </q-item>
+          <q-item clickable v-ripple :active="link === 'clientes'" @click="link = 'clientes'" active-class="my-menu-link">
+            <q-item-section avatar>
+              <q-icon name="people" />
+            </q-item-section>
+
+            <q-item-section>
+              <router-link to="/clientes" style="text-decoration: none; color: black;">Clientes</router-link>
+            </q-item-section>
+          </q-item>
         </q-list>
       </q-scroll-area>
       </q-drawer>
