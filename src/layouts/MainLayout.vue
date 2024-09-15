@@ -6,9 +6,9 @@
     <q-layout view="hHh Lpr lff"   class="shadow-2 rounded-borders">
       <q-header elevated class="bg-primary">
         <q-toolbar>
-          <q-btn flat @click="drawer = !drawer" round dense icon="menu" />
+          <q-btn flat @click.prevent="drawer = !drawer" round dense icon="menu" />
           <q-toolbar-title>Administracion</q-toolbar-title>
-          <q-btn color="warning" label="Salir" no-caps @click="cerrarSesion"  />
+          <q-btn color="warning" label="Salir" no-caps @click.prevent="cerrarSesion"  />
         </q-toolbar>
       </q-header>
 
@@ -22,7 +22,7 @@
       >
       <q-scroll-area style="height: calc(100% - 150px); border-right: 1px solid #ddd">
         <q-list padding>
-          <q-item clickable v-ripple :active="link === 'inicio'" @click="link = 'inicio'" active-class="my-menu-link">
+          <q-item clickable v-ripple :active="link === 'inicio'" @click.prevent="link = 'inicio'" active-class="my-menu-link">
             <q-item-section avatar>
               <q-icon name="home" />
             </q-item-section>
@@ -31,7 +31,7 @@
               <router-link to="/home" style="text-decoration: none; color: black;">Inicio</router-link>
             </q-item-section>
           </q-item>
-          <q-item clickable v-ripple :active="link === 'compras'" @click="link = 'compras'" active-class="my-menu-link">
+          <q-item clickable v-ripple :active="link === 'compras'" @click.prevent="link = 'compras'" active-class="my-menu-link">
             <q-item-section avatar>
               <q-icon name="storefront" />
             </q-item-section>
@@ -40,7 +40,7 @@
               <router-link to="/compras" style="text-decoration: none; color: black;">Compras</router-link>
             </q-item-section>
           </q-item>
-          <q-item clickable v-ripple :active="link === 'compras-directas'" @click="link = 'compras-directas'" active-class="my-menu-link">
+          <q-item clickable v-ripple :active="link === 'compras-directas'" @click.prevent="link = 'compras-directas'" active-class="my-menu-link">
             <q-item-section avatar>
               <q-icon name="shopping_bag" />
             </q-item-section>
@@ -50,7 +50,7 @@
             </q-item-section>
           </q-item>
 
-          <q-item clickable v-ripple :active="link === 'facturas'" @click="link = 'facturas'" active-class="my-menu-link">
+          <q-item clickable v-ripple :active="link === 'facturas'" @click.prevent="link = 'facturas'" active-class="my-menu-link">
             <q-item-section avatar>
               <q-icon name="task" />
             </q-item-section>
@@ -60,7 +60,7 @@
             </q-item-section>
           </q-item>
 
-          <q-item clickable v-ripple :active="link === 'productos'" @click="link = 'productos'" active-class="my-menu-link">
+          <q-item clickable v-ripple :active="link === 'productos'" @click.prevent="link = 'productos'" active-class="my-menu-link">
             <q-item-section avatar>
               <q-icon name="menu_book" />
             </q-item-section>
@@ -70,7 +70,7 @@
             </q-item-section>
           </q-item>
 
-          <q-item clickable v-ripple :active="link === 'ventas'" @click="link = 'ventas'" active-class="my-menu-link">
+          <q-item clickable v-ripple :active="link === 'ventas'" @click.prevent="link = 'ventas'" active-class="my-menu-link">
             <q-item-section avatar>
               <q-icon name="payments" />
             </q-item-section>
@@ -79,7 +79,7 @@
               <router-link to="/ventas" style="text-decoration: none; color: black;">Ventas</router-link>
             </q-item-section>
           </q-item>
-          <q-item clickable v-ripple :active="link === 'proveedores'" @click="link = 'proveedores'" active-class="my-menu-link">
+          <q-item clickable v-ripple :active="link === 'proveedores'" @click.prevent="link = 'proveedores'" active-class="my-menu-link">
             <q-item-section avatar>
               <q-icon name="engineering" />
             </q-item-section>
@@ -88,7 +88,7 @@
               <router-link to="/proveedores" style="text-decoration: none; color: black;">Proveedores</router-link>
             </q-item-section>
           </q-item>
-          <q-item clickable v-ripple :active="link === 'clientes'" @click="link = 'clientes'" active-class="my-menu-link">
+          <q-item clickable v-ripple :active="link === 'clientes'" @click.prevent="link = 'clientes'" active-class="my-menu-link">
             <q-item-section avatar>
               <q-icon name="people" />
             </q-item-section>

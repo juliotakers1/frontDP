@@ -44,14 +44,14 @@
           v-model="producto.nombre"
           use-input
           input-debounce="0"
-          label="Buscar Productos"
+          label="Escriba para buscar productos"
           :options="productoStore.productos"
           option-label="nombre"
           option-value="id"
           @filter="filterFn"
           v-if="third && !barras && !nuevo"
-
         >
+
         <template v-slot:no-option>
           <q-item>
             <q-item-section class="text-grey">
@@ -68,7 +68,9 @@
             @click.stop.prevent="producto.nombre = null"
           />
         </template>
+
       </q-select>
+
       <!-- 2 -->
 
         <q-select
@@ -82,7 +84,6 @@
           option-label="codigo_qr"
           option-value="id"
           @filter="filterFnCodigo"
-
           v-else-if="barras && !third && !nuevo"
         >
         <template v-slot:no-option>
@@ -183,21 +184,15 @@
           lazy-rules
           :rules="[ val => val && val.length > 0 || 'Ingrese el Codigo de barras']"
         />
-          <q-btn
-          class="col-2 float-right"
-          label="Generar Codigo"
-          color="purple"
-          @click="generarCodigoBarra"
-        />
+
 
 
         </div>
 
         <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
 
-          <input type="file" @change="handleFileChange"  class="col-md-4 col-sm-12 q-mb-md" />
-            <p></p>
-            <img :src="imagePreview" alt="" v-if="imagePreview" width="100px" height="100px">
+
+            <img :src="producto.imagen" v-if="producto.imagen"  width="100px" height="100px">
         </div>
 
         <div class="col-md-12 col-sm-12 q-mb-md q-gutter-sm" >
@@ -362,12 +357,10 @@
 <script setup >
 
 import { computed, onMounted, ref, watch, onBeforeUnmount, nextTick  } from "vue";
-import { useFacturaStore } from "src/stores/factura.store";
+import { usefacturaDirectaStore  } from "src/stores/directa.store";
 import { useCompraStore } from 'src/stores/compra.store';
 import { useAuthStore } from 'src/stores/auth.store';
-import { usefacturaFinalStore } from "src/stores/compfinal.store";
 import { useQuasar } from "quasar";
-import  TablaGeneral  from "src/components/Table/TablaGeneral.vue"
 import TableFunctions from "src/components/Table/TableFunctions.vue";
 import JsBarcode from 'jsbarcode';
 import { nanoid } from 'nanoid';
@@ -375,7 +368,7 @@ import jsPDF from 'jspdf';
 const $q = useQuasar();
 const step= ref(1)
  const productoStore = useCompraStore();
- const facturaFinalStore = usefacturaFinalStore()
+ const facturaDirectaStore = usefacturaDirectaStore()
  const authStore = useAuthStore()
  const usr = authStore.user.email
 
@@ -407,12 +400,7 @@ const step= ref(1)
    codigo_qr: '',
    categoria: ''
  })
- const facturaFinal = ref({
-   id_factura: '',
-   id_producto: '',
-   precio_compra: '',
-   precio_venta: '',
- })
+
 
 
 const third = ref(true)
@@ -489,7 +477,7 @@ producto.value = {
  marca: '',
  precio_compra: '',
  precio_venta: '',
- imagen: null,
+ imagen: '',
  codigo_qr: ''
 }
 
@@ -783,7 +771,11 @@ const agregarLista = async() => {
 };
 
 
-
+const facturaDirecta = ref({
+      id_producto: '',
+      precio_compra: '',
+      precio_venta: '',
+    })
 // Función para reiniciar el formulario después de agregar un producto
 const reiniciarFormulario = () => {
 producto.value = {
@@ -808,7 +800,6 @@ const colProductos = [
 // { name: 'ver', label: 'Ver', field: 'ver' },
 // { name: 'editar', label: 'Editar', field: 'editar' },
 ]
-//TODO despues de guardar en producto guardar en otra tabla en la bd como factura compra pra saber como se construyo
 const validarYGuardarData = async () => {
 
   if (step.value === 1) {
@@ -860,7 +851,12 @@ const validarYGuardarData = async () => {
 
 
             }
-
+            facturaDirecta.value = {
+                id_producto: producto.id,
+                precio_compra: producto.precio_compra,
+                precio_venta: producto.precio_venta,
+              };
+                await facturaDirectaStore.guardarFacturaDirecta(facturaDirecta.value)
         });
           //
         // Ejecutar todas las promesas en paralelo
@@ -921,29 +917,22 @@ const totalVentas = computed(() => {
   }, 0);
 });
 
-const precioCompra = ref(0); // Esto se actualizará dinámicamente
+const precioCompra = ref(0); // Precio de compra
+watch(() => venta.value.categoria, (newCategoria) => {
+  console.log(newCategoria, 'newCategoria')
+  // Lógica cuando cambia la categoría
+  if (newCategoria !== 'Producto') {
+    precioCompra.value = 0; // Si no es "Producto", asignamos 0
+    console.log(precioCompra.value,'precioCompra')
+  } else {
+    // Mantener el precio del producto si la categoría es "Producto"
 
-// Watch para reaccionar cuando se cambie la categoría
-watch(
-  () => venta.value.categoria,
-  (newCategoria) => {
-    if (newCategoria === 'producto') {
       precioCompra.value = totalVentas.value;
-    } else {
-      precioCompra.value = 0; // Resetear a 0 si no es 'producto'
-    }
-  }
-);
+      console.log(totalVentas.value,'totalVentass')
 
-// Watch para actualizar el valor de totalVentas cuando cambie el precioCompra
-watch(
-  () => precioCompra.value,
-  (newPrecio) => {
-    if (venta.value.categoria === 'producto') {
-      totalVentas.value = newPrecio;
-    }
   }
-);
+});
+
 </script>
 
 
