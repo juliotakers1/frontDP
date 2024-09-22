@@ -54,6 +54,11 @@ const routes = [
        roles: ['ADMIN','USER']
      },
     },
+    { path: '/actualizar-compra', name: 'actualizar-compra', component: () => import('pages/CompraPages/EditarCompraPage.vue'),
+      meta: { requiredAuthorization: true,
+       roles: ['ADMIN','USER']
+     },
+    },
     ]
   },
 

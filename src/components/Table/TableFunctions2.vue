@@ -19,7 +19,7 @@
           >
             {{ col.label }}
           </q-th>
-           <q-th auto-width >Ver</q-th>
+           <q-th auto-width ></q-th>
            <!-- <q-th auto-width >Editar</q-th> -->
         </q-tr>
       </template>
@@ -38,7 +38,7 @@
             {{ col.value }}
           </q-td>
           <q-td auto-width>
-            <q-btn round color="positive" icon="visibility" size="sm" @click="viewProducto(props.row)" />
+
             <q-btn round color="negative" icon="delete" size="sm" @click="eliminarProducto(props.row)" />
           </q-td>
           <!-- <q-td auto-width>
@@ -136,10 +136,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useCompraStore } from 'src/stores/compra.store';
+import { usefacturaFinalStore } from 'src/stores/compfinal.store';
 // Define las props recibidas
 const productoStore = useCompraStore();
+const facturaFinalStore = usefacturaFinalStore()
 const props = defineProps({
   columnsProp: Array,
   rowsProp: Array,
@@ -154,20 +156,40 @@ const viewProducto = (producto) => {
   console.log(selectedProducto.value)
 };
 
-const editProducto = (producto) => {
-  selectedProducto.value = producto;
-  editprompt.value = true;
-  console.log(selectedProducto.value)
-};
+const listaTemp = ref([])
 
 
 // Función para eliminar el producto de la lista directamente
-const eliminarProducto = (producto) => {
-  const index = props.rowsProp.findIndex(item => item.id === producto.id);
-  if (index !== -1) {
-    props.rowsProp.splice(index, 1);  // Eliminar el producto de la lista original
+const eliminarProducto = async (producto) => {
+  // Verificar si el producto aún existe en facturas finales
+  const facturaConProducto = facturaFinalStore.facturasFinales.find(f => f.id_producto === producto.id);
+
+  if (facturaConProducto) {
+    console.log(`Eliminando producto con ID: ${facturaConProducto.id}`);
+
+    // Buscar el índice del producto en props.rowsProp
+    const index = props.rowsProp.findIndex(item => item.id === producto.id);
+    if (index !== -1) {
+      // Eliminar el producto de props.rowsProp
+      props.rowsProp.splice(index, 1);
+      console.log(`Producto eliminado de rowsProp con ID: ${producto.id}`);
+    } else {
+      console.log(`Producto con ID: ${producto.id} no encontrado en rowsProp`);
+    }
+
+    // Eliminar el producto de facturaFinalStore
+    await facturaFinalStore.deleteFacturaFinal(facturaConProducto.id);
+    console.log(`Producto eliminado de facturaFinalStore con ID: ${facturaConProducto.id}`);
+
+    return facturaConProducto.id;
+  } else {
+    console.log('Producto no encontrado en facturas finales, puede que ya haya sido eliminado.');
+    return null;
   }
-  console.log('Producto eliminado:', producto);
 };
+
+onMounted( async() => {
+  await facturaFinalStore.obtenerFacturaFinal()
+});
 
 </script>

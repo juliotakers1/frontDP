@@ -33,6 +33,21 @@ export const usefacturaFinalStore = defineStore({
           throw error;
         }
       },
+      async deleteFacturaFinal(id) {
+        try {
+          // Espera a que se complete la eliminación en el backend
+          await axios.delete(`http://localhost:3000/factura-compra/id/${id}`);
+
+          // Actualiza el estado local del store eliminando la factura del arreglo facturasFinales
+          this.facturasFinales = this.facturasFinales.filter(factura => factura.id !== id);
+
+          console.log(`Factura con ID: ${id} eliminada correctamente`);
+        } catch (error) {
+          console.error('Error al borrar la factura:', error);
+          throw new Error('No se pudo borrar la factura. Inténtalo de nuevo más tarde.');
+        }
+      }
+
 
   }
 });

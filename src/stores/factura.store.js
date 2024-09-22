@@ -27,7 +27,6 @@ export const useFacturaStore = defineStore({
       try {
         const res = await axios.get('http://localhost:3000/factura/');
         this.facturas = res.data.facturas
-        console.log(this.facturas, 'store')
       } catch (error) {
         console.error('Error al cargar facturas:', error);
         throw error;
@@ -66,6 +65,16 @@ export const useFacturaStore = defineStore({
         } catch (error) {
           console.error('Error al borrar la factura:', error);
           throw new Error('No se pudo borrar la factura. Inténtalo de nuevo más tarde.');
+        }
+      },
+      async updateFactura(payload) {
+
+        try {
+          const res = await axios.put(`http://localhost:3000/factura/id/${payload.id}`, payload);
+          return res.data;
+        } catch (error) {
+          console.error('Error al actualizar la Factura:', error);
+          throw error;
         }
       },
   }

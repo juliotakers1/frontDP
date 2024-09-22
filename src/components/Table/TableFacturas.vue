@@ -1,22 +1,29 @@
 <template>
   <div>
     <div class="row q-gutter-md q-pa-md justify-end">
+      <q-btn label="Exportar Excel" class="col-md-1 col-sm-12 bg-positive text-white" @click="exportToExcel" />
+      <q-input
+        v-model="searchQuery"
+        label="Buscar"
+        outlined
+        class="col-md-7 col-sm-12"
+      />
       <q-input
       v-model="fechaInicio"
       label="Fecha Inicio"
       type="date"
       outlined
-      class="col-md-4 col-sm-12"
+      class="col-md-1 col-sm-12"
     />
     <q-input
       v-model="fechaFin"
       label="Fecha Fin"
       type="date"
       outlined
-      class="col-md-4 col-sm-12"
+      class="col-md-1 col-sm-12"
     />
 
-    <q-btn label="Filtrar" @click="filtrarPorFecha"  class="col-md-2 col-sm-12" />
+
     </div>
     <!-- Inputs para seleccionar la fecha de inicio y fin -->
 
@@ -63,11 +70,13 @@
           </q-td>
           <q-td auto-width>
             <q-btn
-              round
-              color="warning"
-              icon="edit"
-              size="sm"
+            round
+            color="warning"
+            icon="edit"
+            size="sm"
+            @click="actualizarCompra(props.row)"
             />
+
           </q-td>
         </q-tr>
       </template>
@@ -80,10 +89,12 @@
 import { onMounted, ref, computed } from 'vue';
 import { useCompraStore } from 'src/stores/compra.store';
 import { usefacturaFinalStore } from "src/stores/compfinal.store";
-
+import * as XLSX from 'xlsx';
 const productoStore = useCompraStore();
 const facFinalStore = usefacturaFinalStore();
 const emit = defineEmits(['producto-seleccionado']);
+import { useRouter } from 'vue-router';
+const router = useRouter();
 const props = defineProps({
   columnsProp: Array,
   rowsProp: Array,
@@ -93,7 +104,7 @@ const props = defineProps({
 // Variables para las fechas de filtro
 const fechaInicio = ref(null);
 const fechaFin = ref(null);
-
+const searchQuery = ref("");
 // Producto seleccionado
 const producto = ref({
   id: '',
@@ -118,28 +129,57 @@ const obtenerRow = (factura) => {
 };
 
 // Computed property para filtrar las filas en función de las fechas
+// Computed property para filtrar las filas en función de la búsqueda y las fechas
 const filteredRows = computed(() => {
-  if (!fechaInicio.value || !fechaFin.value) {
-    return props.rowsProp;
+  let filtered = props.rowsProp;
+
+  // Filtrar por fechas si están seleccionadas
+  if (fechaInicio.value && fechaFin.value) {
+    const startDate = new Date(fechaInicio.value);
+    const endDate = new Date(fechaFin.value);
+
+    filtered = filtered.filter(row => {
+      const emisionDate = new Date(row.fecha_emision);
+      return emisionDate >= startDate && emisionDate <= endDate;
+    });
   }
 
-  // Convierte las fechas a objetos Date
-  const startDate = new Date(fechaInicio.value);
-  const endDate = new Date(fechaFin.value);
+  // Filtrar por el término de búsqueda
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(row =>
+      Object.values(row).some(val =>
+        String(val).toLowerCase().includes(query)
+      )
+    );
+  }
 
-  // Filtra las filas entre las fechas de inicio y fin
-  return props.rowsProp.filter(row => {
-    const emisionDate = new Date(row.fecha_emision);
-    return emisionDate >= startDate && emisionDate <= endDate;
-  });
+  return filtered;
 });
+// Función para exportar a Excel
+const exportToExcel = () => {
+  // Genera un nuevo libro de Excel
+  const wb = XLSX.utils.book_new();
 
-// Función para filtrar las filas por fecha
-const filtrarPorFecha = () => {
-  // La lógica del filtro ya está en `filteredRows`
-  console.log('Filtrando por fechas:', fechaInicio.value, fechaFin.value);
+  // Crea una hoja de cálculo con los datos filtrados
+  const ws = XLSX.utils.json_to_sheet(filteredRows.value);
+
+  // Agrega la hoja de cálculo al libro
+  XLSX.utils.book_append_sheet(wb, ws, 'Datos Filtrados');
+
+  // Exporta el archivo Excel
+  XLSX.writeFile(wb, 'DatosFiltrados.xlsx');
 };
 
+const actualizarCompra = (data) => {
+  console.log(data, 'ladata')
+  router.push({
+    name: 'actualizar-compra', // El nombre de la ruta definida en tu router
+    query: {
+      rowData: JSON.stringify(data) // Aquí pasas el objeto recibido en las props
+    }
+  });
+};
 // Obtén los datos de la tienda en el hook `onMounted`
 onMounted(async () => {
   await facFinalStore.obtenerFacturaFinal();
